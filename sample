@@ -1,0 +1,42 @@
+{
+  "arr": [
+    "zero",
+    "two",
+    "three",
+    5,
+    true,
+    1.910000,
+    {
+      "hello": "val2",
+      "value": "test",
+      "var2": "val2"
+    },
+    "THREE",
+    "append1",
+    "append2"
+  ],
+  "arr2": [
+    [
+      [
+        true
+      ]
+    ]
+  ],
+  "hello": "THR",
+  "hello2": {
+    "hello": {
+      "hello": "ux",
+      "this": "ux"
+    },
+    "ubx": {
+      "hello": "ux",
+      "this": "ux"
+    }
+  },
+  "obj": {
+    "hello": "John Doe",
+    "name": "John Doe"
+  },
+  "value": 0.500000,
+  "xyz": "THR"
+}

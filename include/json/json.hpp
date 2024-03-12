@@ -3,6 +3,7 @@
 #include <utility>
 #include <ostream>
 #include <variant>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <map>
@@ -66,11 +67,15 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 	const bool operator ==(const std::string& s) const;
 	const bool operator ==(const char* s) const;
 	const bool operator ==(const std::nullptr_t& n) const;
+	const bool operator ==(const uint64_t& i) const;
+	const bool operator ==(const int64_t& i) const;
 
 	JSON& operator =(const JSON& other);
 	JSON& operator +=(const JSON& other);
 	JSON& operator +=(const std::pair<std::string, JSON>& pair);
 	JSON& operator +=(const std::initializer_list<std::pair<std::string, JSON>>& list);
+	JSON& operator =(const uint64_t& i);
+	JSON& operator =(const int64_t& i);
 
 	JSON& operator [](const std::string& key);
 	JSON& operator [](const char* key);
@@ -149,6 +154,8 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 	JSON(const bool& b);
 	JSON(const int& i);
 	JSON(const long long& l);
+	JSON(const uint64_t& i);
+	JSON(const int64_t& i);
 	JSON(const double& d);
 	JSON(const float& f);
 	JSON(const std::string& s);

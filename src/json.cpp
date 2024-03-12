@@ -26,6 +26,18 @@ JSON::JSON(const long long& l) {
 	this -> emplace<long long>(std::forward<decltype(l)>(l));
 }
 
+JSON::JSON(const uint64_t& i) {
+
+	long long l = (long long)i;
+	this -> emplace<long long>(std::forward<decltype(l)>(l));
+}
+
+JSON::JSON(const int64_t& i) {
+
+	long long l = (long long)i;
+	this -> emplace<long long>(std::forward<decltype(l)>(l));
+}
+
 JSON::JSON(const double& d) {
 	this -> emplace<double>(std::forward<decltype(d)>(d));
 }
@@ -123,6 +135,16 @@ const bool JSON::operator ==(const long long& l) const {
 	return false;
 }
 
+const bool JSON::operator ==(const uint64_t& i) const {
+
+	return this -> operator ==((long long)i);
+}
+
+const bool JSON::operator ==(const int64_t& i) const {
+
+	return this -> operator ==((long long)i);
+}
+
 const bool JSON::operator ==(const double& d) const {
 
 	if ( *this == FLOAT && this -> to_float() == d )
@@ -201,6 +223,20 @@ JSON& JSON::operator +=(const std::pair<std::string, JSON>& pair) {
 JSON& JSON::operator +=(const std::initializer_list<std::pair<std::string, JSON>>& list) {
 
 	this -> append(list);
+	return *this;
+}
+
+JSON& JSON::operator =(const uint64_t& i) {
+
+	long long l = (long long)i;
+	this -> emplace<long long>(std::forward<decltype(l)>(l));
+	return *this;
+}
+
+JSON& JSON::operator =(const int64_t& i) {
+
+	long long l = (long long)i;
+	this -> emplace<long long>(std::forward<decltype(l)>(l));
 	return *this;
 }
 

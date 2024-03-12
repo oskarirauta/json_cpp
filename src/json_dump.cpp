@@ -88,3 +88,11 @@ const std::string JSON::dump(const bool pretty) {
 		return iterate(*this, pretty, 0);
 	else return to_string();
 }
+
+const std::string JSON::dump_minified() const {
+	return this -> dump(false);
+}
+
+const std::string JSON::dump_minified() {
+	return this -> dump(false);
+}

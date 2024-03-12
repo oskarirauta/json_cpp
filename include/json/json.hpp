@@ -143,6 +143,8 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 
 	const std::string dump(const bool pretty = true);
 	const std::string dump(const bool pretty = true) const;
+	const std::string dump_minified();
+	const std::string dump_minified() const;
 
 	static const std::string escape(const std::string& s);
 	static const std::string unescape(const std::string& s);

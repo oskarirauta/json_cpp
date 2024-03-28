@@ -240,6 +240,19 @@ JSON& JSON::operator =(const int64_t& i) {
 	return *this;
 }
 
+JSON& JSON::operator =(const bool& b) {
+
+	this -> emplace<bool>(std::forward<decltype(b)>(b));
+	return *this;
+}
+
+JSON& JSON::operator =(const int& i) {
+
+	long long l = (long long)i;
+	this -> emplace<long long>(std::forward<decltype(l)>(l));
+	return *this;
+}
+
 JSON& JSON::operator [](const std::string& key) {
 
 	if ( !std::holds_alternative<std::map<std::string, JSON>>(*this)) {

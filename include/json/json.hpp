@@ -76,6 +76,8 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 	JSON& operator +=(const std::initializer_list<std::pair<std::string, JSON>>& list);
 	JSON& operator =(const uint64_t& i);
 	JSON& operator =(const int64_t& i);
+	JSON& operator =(const bool& b);
+	JSON& operator =(const int& i);
 
 	JSON& operator [](const std::string& key);
 	JSON& operator [](const char* key);

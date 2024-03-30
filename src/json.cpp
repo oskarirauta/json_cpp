@@ -51,6 +51,11 @@ JSON::JSON(const std::string& s) {
 	this -> emplace<std::string>(std::forward<decltype(s)>(s));
 }
 
+JSON::JSON(const char* s) {
+	std::string _s(s);
+	this -> emplace<std::string>(std::forward<decltype(_s)>(_s));
+}
+
 JSON::JSON(const std::map<std::string, JSON>& m) {
 	this -> emplace<std::map<std::string, JSON>>(std::forward<decltype(m)>(m));
 }
@@ -250,6 +255,19 @@ JSON& JSON::operator =(const int& i) {
 
 	long long l = (long long)i;
 	this -> emplace<long long>(std::forward<decltype(l)>(l));
+	return *this;
+}
+
+JSON& JSON::operator =(const std::string& s) {
+
+	this -> emplace<std::string>(std::forward<decltype(s)>(s));
+	return *this;
+}
+
+JSON& JSON::operator =(const char* s) {
+
+	std::string _s = s;
+	this -> emplace<std::string>(std::forward<decltype(_s)>(_s));
 	return *this;
 }
 

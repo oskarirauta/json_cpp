@@ -78,6 +78,8 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 	JSON& operator =(const int64_t& i);
 	JSON& operator =(const bool& b);
 	JSON& operator =(const int& i);
+	JSON& operator =(const std::string& s);
+	JSON& operator =(const char* s);
 
 	JSON& operator [](const std::string& key);
 	JSON& operator [](const char* key);
@@ -163,6 +165,7 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 	JSON(const double& d);
 	JSON(const float& f);
 	JSON(const std::string& s);
+	JSON(const char* s);
 	JSON(const std::nullptr_t& n);
 	JSON(const std::map<std::string, JSON>&m);
 	JSON(const std::vector<JSON>&a);

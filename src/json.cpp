@@ -213,9 +213,7 @@ JSON& JSON::operator =(const bool& b) {
 	return *this;
 }
 
-JSON& JSON::operator [](const string_variant& v) {
-
-	std::string key = JSON::to_string(v);
+JSON& JSON::operator [](const std::string& key) {
 
 	if ( !std::holds_alternative<std::map<std::string, JSON>>(*this)) {
 		std::map<std::string, JSON> m;
@@ -225,9 +223,17 @@ JSON& JSON::operator [](const string_variant& v) {
 	return std::get<std::map<std::string, JSON>>(*this)[key];
 }
 
-JSON& JSON::operator [](const number_variant& v) {
+JSON& JSON::operator [](const char* key) {
 
-	size_t index = (size_t)JSON::to_number(v);
+	if ( !std::holds_alternative<std::map<std::string, JSON>>(*this)) {
+		std::map<std::string, JSON> m;
+		this -> emplace<std::map<std::string, JSON>>(std::forward<decltype(m)>(m));
+	}
+
+	return std::get<std::map<std::string, JSON>>(*this)[std::string(key)];
+}
+
+JSON& JSON::operator [](const size_t index) {
 
 	if ( !std::holds_alternative<std::vector<JSON>>(*this)) {
 		std::vector<JSON> a;
@@ -240,9 +246,11 @@ JSON& JSON::operator [](const number_variant& v) {
 	} else return std::get<std::vector<JSON>>(*this)[index];
 }
 
-const JSON JSON::operator [](const string_variant& v) const {
+JSON& JSON::operator [](const int index) {
+	return operator[]((size_t)index);
+}
 
-	std::string key = JSON::to_string(v);
+const JSON JSON::operator [](const std::string& key) const {
 
 	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {
 		std::map<std::string, JSON> m = std::get<std::map<std::string, JSON>>(*this);
@@ -250,9 +258,15 @@ const JSON JSON::operator [](const string_variant& v) const {
 	} else throw JSON::exception(JSON::ERROR_CODE::OBJECT_SUBSCRIPT_FAIL);
 }
 
-const JSON JSON::operator [](const number_variant& v) const {
+const JSON JSON::operator [](const char* key) const {
 
-	size_t index = (size_t)JSON::to_number(v);
+	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {
+		std::map<std::string, JSON> m = std::get<std::map<std::string, JSON>>(*this);
+		return m[std::string(key)];
+	} else throw JSON::exception(JSON::ERROR_CODE::OBJECT_SUBSCRIPT_FAIL);
+}
+
+const JSON JSON::operator [](const size_t index) const {
 
 	std::vector<JSON> a;
 	if ( std::holds_alternative<std::vector<JSON>>(*this)) {
@@ -263,9 +277,11 @@ const JSON JSON::operator [](const number_variant& v) const {
 	} else throw JSON::exception(JSON::ERROR_CODE::ARRAY_SUBSCRIPT_FAIL);
 }
 
-JSON& JSON::at(const string_variant& v) {
+const JSON JSON::operator [](const int index) const {
+	return operator[]((size_t) index);
+}
 
-	std::string key = JSON::to_string(v);
+JSON& JSON::at(const std::string& key) {
 
 	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {
 		if ( this -> contains(key))
@@ -277,13 +293,20 @@ JSON& JSON::at(const string_variant& v) {
 						JSON::describe(this -> type()));
 }
 
-JSON& JSON::at(const number_variant& v) {
+JSON& JSON::at(const char* key) {
 
-	size_t index = JSON::to_number(v);
+	try {
+		return this -> at(std::string(key));
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON& JSON::at(const size_t index) {
 
 	if ( std::holds_alternative<std::vector<JSON>>(*this)) {
 		if ( this -> size() > index )
-			return operator[](v);
+			return operator[](index);
 		else throw JSON::exception(JSON::ERROR_CODE::ARRAY_SUBSCRIPT_RANGE_ERROR,
 				"subscript failure with .at(index), index " + std::to_string(index) + " is out of bounds(" +
 						std::to_string(this -> size()) + ")");
@@ -292,9 +315,16 @@ JSON& JSON::at(const number_variant& v) {
 						JSON::describe(this -> type()));
 }
 
-const JSON JSON::at(const string_variant& v) const {
+JSON& JSON::at(const int index) {
 
-	std::string key = JSON::to_string(v);
+	try {
+		return this -> at((size_t) index);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+const JSON JSON::at(const std::string& key) const {
 
 	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {
 		if ( this -> contains(key))
@@ -306,19 +336,35 @@ const JSON JSON::at(const string_variant& v) const {
 						JSON::describe(this -> type()));
 }
 
-const JSON JSON::at(const number_variant& v) const {
+const JSON JSON::at(const char* key) const {
 
-	size_t index = (size_t)JSON::to_number(v);
+	try {
+		return this -> at(std::string(key));
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+const JSON JSON::at(const size_t index) const {
 
 	if ( std::holds_alternative<std::vector<JSON>>(*this)) {
 		if ( this -> size() > index )
-			return operator[](v);
+			return operator[](index);
 		else throw JSON::exception(JSON::ERROR_CODE::ARRAY_SUBSCRIPT_RANGE_ERROR,
 				"subscript failure with .at(index), index " + std::to_string(index) + " is out " +
 						"bounds(" + std::to_string(this -> size()) + ")");
 	} else throw JSON::exception(JSON::ERROR_CODE::INVALID_ARRAY_SUBSCRIPT,
 				"subscript failure with .at(index), function can be used only for arrays, this is " +
 						JSON::describe(this -> type()));
+}
+
+const JSON JSON::at(const int index) const {
+
+	try {
+		return this -> at((size_t) index);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
 }
 
 const std::size_t JSON::length() const {
@@ -344,9 +390,7 @@ const bool JSON::empty() const {
 	else return *this == NULLPTR ? true : false;
 }
 
-const bool JSON::contains(const string_variant& v) const {
-
-	std::string key = JSON::to_string(v);
+const bool JSON::contains(const std::string& key) const {
 
 	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {
 		const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this);
@@ -594,9 +638,7 @@ void JSON::clear() {
 					" element type cannot be cleared");
 }
 
-void JSON::erase(const string_variant& v) {
-
-	std::string key = JSON::to_string(v);
+void JSON::erase(const std::string& key) {
 
 	if ( *this == OBJECT ) {
 		if ( this -> contains(key))
@@ -606,9 +648,7 @@ void JSON::erase(const string_variant& v) {
 	} else throw JSON::exception(JSON::ERROR_CODE::ELEMENT_CANNOT_ERASE_KEY);
 }
 
-void JSON::erase(const number_variant& v) {
-
-	size_t index = JSON::to_number(v);
+void JSON::erase(const size_t index) {
 
 	if ( *this == OBJECT ) {
 		std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this);
@@ -629,6 +669,15 @@ void JSON::erase(const number_variant& v) {
 		} else throw JSON::exception(JSON::ERROR_CODE::ERASE_FAILED_NO_INDEX,
 						"erase failed, index " + std::to_string(index) + " is out of array's bounds");
 	} else throw JSON::exception(JSON::ERROR_CODE::ELEMENT_CANNOT_ERASE_INDEX);
+}
+
+void JSON::erase(const int index) {
+
+	try {
+		this -> erase((size_t)index);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
 }
 
 void JSON::append(const JSON& json) {
@@ -687,11 +736,15 @@ void JSON::clear() const {
 	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "function clear is not available for const JSON");
 }
 
-void JSON::erase(const string_variant& key) const {
+void JSON::erase(const std::string& key) const {
 	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "function erase is not available for const JSON");
 }
 
-void JSON::erase(const number_variant& index) const {
+void JSON::erase(const size_t index) const {
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "function erase is not available for const JSON");
+}
+
+void JSON::erase(const int index) const {
 	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "function erase is not available for const JSON");
 }
 

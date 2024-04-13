@@ -91,20 +91,29 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 	JSON& operator =(const string_variant& v);
 	JSON& operator =(const bool& b);
 
-	JSON& operator [](const string_variant& key);
-	JSON& operator [](const number_variant& index);
+	JSON& operator [](const std::string& key);
+	JSON& operator [](const char* key);
+	JSON& operator [](size_t index);
+	JSON& operator [](int index);
 
-	const JSON operator [](const string_variant& key) const;
-	const JSON operator [](const number_variant& index) const;
+	const JSON operator [](const std::string& key) const;
+	const JSON operator [](const char* key) const;
+	const JSON operator [](size_t index) const;
+	const JSON operator [](int index) const;
 
-	JSON& at(const string_variant& key);
-	JSON& at(const number_variant& index);
-	const JSON at(const string_variant& key) const;
-	const JSON at(const number_variant& index) const;
+	JSON& at(const std::string& key);
+	JSON& at(const char* key);
+	JSON& at(const size_t index);
+	JSON& at(const int index);
+	const JSON at(const std::string& key) const;
+	const JSON at(const char* key) const;
+	const JSON at(const size_t index) const;
+	const JSON at(const int index) const;
+
 	const size_t length() const;
 	const std::size_t size() const;
 	const bool empty() const;
-	const bool contains(const string_variant& key) const;
+	const bool contains(const std::string& key) const;
 
 	const std::string to_string() const;
 	long double to_float() const;
@@ -126,8 +135,10 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 	operator bool() const;
 
 	void clear();
-	void erase(const string_variant& key);
-	void erase(const number_variant& index);
+	void erase(const std::string& key);
+	void erase(const size_t index);
+	void erase(const int index);
+
 	void append(const JSON& json);
 	void insert(const JSON& json);
 	void append(const std::pair<std::string, JSON>& pair);
@@ -136,8 +147,10 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 	void insert(const std::initializer_list<std::pair<std::string, JSON>>& list);
 
 	void clear() const;
-	void erase(const string_variant& key) const;
-	void erase(const number_variant& index) const;
+	void erase(const std::string& key) const;
+	void erase(const size_t index) const;
+	void erase(const int index) const;
+
 	void append(const JSON& json) const;
 	void insert(const JSON& json) const;
 	void append(const std::pair<std::string, JSON>& pair) const;

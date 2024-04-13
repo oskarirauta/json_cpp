@@ -15,15 +15,6 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 
 	using variant::variant;
 
-	using number_variant = std::variant<char, signed char, unsigned char,
-				short, short, unsigned short, signed short,
-				int, signed, signed int, unsigned int, long, signed long, unsigned long,
-				long long, unsigned long long, signed long long, size_t>;
-
-	using float_variant = std::variant<long double, double, float>;
-
-	using string_variant = std::variant<std::string, char*>;
-
 	struct iterator;
 	struct const_iterator;
 
@@ -71,24 +62,62 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 	const bool operator ==(const TYPE type) const;
 	const bool operator !=(const TYPE type) const;
 
-	const bool operator ==(const number_variant& v) const;
-	const bool operator ==(const float_variant& v) const;
-	const bool operator ==(const string_variant& v) const;
-	const bool operator ==(const bool& b) const;
+	const bool operator ==(const char& c) const;
+	const bool operator ==(const unsigned char& c) const;
+	const bool operator ==(const int& i) const;
+	const bool operator ==(const unsigned int& i) const;
+	const bool operator ==(const long& l) const;
+	const bool operator ==(const unsigned long& l) const;
+	const bool operator ==(const long long& ll) const;
+	const bool operator ==(const unsigned long long& ll) const;
+
+	const bool operator ==(const long double& ld) const;
+	const bool operator ==(const double& d) const;
+	const bool operator ==(const float& f) const;
+
+	const bool operator ==(const std::string& s) const;
+	const bool operator ==(const char* s) const;
+
 	const bool operator ==(const std::nullptr_t& n) const;
 
-	const bool operator !=(const number_variant& v) const;
-	const bool operator !=(const float_variant& v) const;
-	const bool operator !=(const string_variant& v) const;
+	const bool operator !=(const char& c) const;
+	const bool operator !=(const unsigned char& c) const;
+	const bool operator !=(const int& i) const;
+	const bool operator !=(const unsigned int& i) const;
+	const bool operator !=(const long& l) const;
+	const bool operator !=(const unsigned long& l) const;
+	const bool operator !=(const long long& ll) const;
+	const bool operator !=(const unsigned long long& ll) const;
+
+	const bool operator !=(const long double& ld) const;
+	const bool operator !=(const double& d) const;
+	const bool operator !=(const float& f) const;
+
+	const bool operator !=(const std::string& s) const;
+	const bool operator !=(const char* s) const;
+
 	const bool operator !=(const std::nullptr_t& n) const;
 
 	JSON& operator =(const JSON& other);
 	JSON& operator +=(const JSON& other);
 	JSON& operator +=(const std::pair<std::string, JSON>& pair);
 	JSON& operator +=(const std::initializer_list<std::pair<std::string, JSON>>& list);
-	JSON& operator =(const number_variant& v);
-	JSON& operator =(const float_variant& v);
-	JSON& operator =(const string_variant& v);
+
+	JSON& operator =(const char& c);
+	JSON& operator =(const unsigned char& c);
+	JSON& operator =(const int& i);
+	JSON& operator =(const unsigned int& i);
+	JSON& operator =(const long& l);
+	JSON& operator =(const unsigned long& l);
+	JSON& operator =(const long long& ll);
+	JSON& operator =(const unsigned long long& ll);
+
+	JSON& operator =(const long double& ld);
+	JSON& operator =(const double& d);
+	JSON& operator =(const float& f);
+
+	JSON& operator =(const std::string& s);
+	JSON& operator =(const char* s);
 	JSON& operator =(const bool& b);
 
 	JSON& operator [](const std::string& key);
@@ -177,18 +206,30 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 
 	JSON();
 	JSON(const bool& b);
-	JSON(const number_variant& v);
-	JSON(const float_variant& v);
-	JSON(const string_variant& v);
+	JSON(const char& c);
+	JSON(const unsigned char& c);
+	JSON(const int& i);
+	JSON(const unsigned int& i);
+	JSON(const long& l);
+	JSON(const unsigned long& l);
+	JSON(const long long& ll);
+	JSON(const unsigned long long& ll);
+
+	JSON(const long double& ld);
+	JSON(const double& d);
+	JSON(const float& f);
+
+	JSON(const std::string &s);
+	JSON(const char* s);
+
 	JSON(const std::nullptr_t& n);
 	JSON(const std::map<std::string, JSON>&m);
 	JSON(const std::vector<JSON>&a);
 	JSON(const JSON& other);
 
-	static JSON parse(const string_variant& s);
-	static long long to_number(const number_variant& v);
-	static long double to_float(const float_variant& v);
-	static std::string to_string(const string_variant& v);
+	static JSON parse(const std::string& s);
+	static JSON parse(const char* s);
+
 	friend std::ostream& operator <<(std::ostream& os, const JSON& json);
 
 	private:

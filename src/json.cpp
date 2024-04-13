@@ -17,19 +17,66 @@ JSON::JSON(const bool& b) {
 	this -> emplace<bool>(std::forward<decltype(b)>(b));
 }
 
-JSON::JSON(const number_variant& v) {
-	unsigned ll = JSON::to_number(v);
+JSON::JSON(const char& c) {
+	long long ll = (long long)c;
 	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
 }
 
-JSON::JSON(const float_variant& v) {
-	unsigned ld = JSON::to_float(v);
+JSON::JSON(const unsigned char& c) {
+	long long ll = (long long)c;
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+}
+
+JSON::JSON(const int& i) {
+	long long ll = (long long)i;
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+}
+
+JSON::JSON(const unsigned int& i) {
+	long long ll = (long long)i;
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+}
+
+JSON::JSON(const long& l) {
+	long long ll = (long long)l;
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+}
+
+JSON::JSON(const unsigned long& l) {
+	long long ll = (long long)l;
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+}
+
+JSON::JSON(const long long& ll) {
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+}
+
+JSON::JSON(const unsigned long long& ll) {
+	long long _ll = (long long)ll;
+	this -> emplace<long long>(std::forward<decltype(_ll)>(_ll));
+}
+
+JSON::JSON(const long double& ld) {
 	this -> emplace<long double>(std::forward<decltype(ld)>(ld));
 }
 
-JSON::JSON(const string_variant& v) {
-	std::string s = JSON::to_string(v);
+JSON::JSON(const double& d) {
+	long long ld = (long double)d;
+	this -> emplace<long double>(std::forward<decltype(ld)>(ld));
+}
+
+JSON::JSON(const float& f) {
+	long long ld = (long double)f;
+	this -> emplace<long double>(std::forward<decltype(ld)>(ld));
+}
+
+JSON::JSON(const std::string &s) {
 	this -> emplace<std::string>(std::forward<decltype(s)>(s));
+}
+
+JSON::JSON(const char* s) {
+	std::string _s(s);
+	this -> emplace<std::string>(std::forward<decltype(_s)>(_s));
 }
 
 JSON::JSON(const std::map<std::string, JSON>& m) {
@@ -95,24 +142,56 @@ const bool JSON::operator !=(const TYPE type) const {
 	return operator ==(type) ? false : true;
 }
 
-const bool JSON::operator ==(const number_variant& v) const {
-
-	return *this == INT && this -> to_number() == JSON::to_number(v);
+const bool JSON::operator ==(const char& c) const {
+	return *this == INT && (char)this -> to_number() == c;
 }
 
-const bool JSON::operator ==(const float_variant& v) const {
-
-	return *this == FLOAT && this -> to_float() == JSON::to_float(v);
+const bool JSON::operator ==(const unsigned char& c) const {
+	return *this == INT && (unsigned char)this -> to_number() == c;
 }
 
-const bool JSON::operator ==(const string_variant& v) const {
-
-	return *this == STRING && this -> to_string() == JSON::to_string(v);
+const bool JSON::operator ==(const int& i) const {
+	return *this == INT && (int)this -> to_number() == i;
 }
 
-const bool JSON::operator ==(const bool& b) const {
+const bool JSON::operator ==(const unsigned int& i) const {
+	return *this == INT && (unsigned int)this -> to_number() == i;
+}
 
-	return *this == BOOL && this -> to_bool() == b;
+const bool JSON::operator ==(const long& l) const {
+	return *this == INT && (long)this -> to_number() == l;
+}
+
+const bool JSON::operator ==(const unsigned long& l) const {
+	return *this == INT && (unsigned long)this -> to_number() == l;
+}
+
+const bool JSON::operator ==(const long long& ll) const {
+	return *this == INT && this -> to_number() == ll;
+}
+
+const bool JSON::operator ==(const unsigned long long& ll) const {
+	return *this == INT && (unsigned long long)this -> to_number() == ll;
+}
+
+const bool JSON::operator ==(const long double& ld) const {
+	return *this == FLOAT && this -> to_float() == ld;
+}
+
+const bool JSON::operator ==(const double& d) const {
+	return *this == FLOAT && (double)this -> to_float() == d;
+}
+
+const bool JSON::operator ==(const float& f) const {
+	return *this == FLOAT && (float)this -> to_float() == f;
+}
+
+const bool JSON::operator ==(const std::string& s) const {
+	return *this == STRING && this -> to_string() == s;
+}
+
+const bool JSON::operator ==(const char* s) const {
+	return *this == STRING && this -> to_string() == std::string(s);
 }
 
 const bool JSON::operator ==(const std::nullptr_t& n) const {
@@ -120,19 +199,56 @@ const bool JSON::operator ==(const std::nullptr_t& n) const {
 	return *this == NULLPTR;
 }
 
-const bool JSON::operator !=(const number_variant& v) const {
-
-	return !(*this == v);
+const bool JSON::operator !=(const char& c) const {
+	return !(*this == c);
 }
 
-const bool JSON::operator !=(const float_variant& v) const {
-
-	return !(*this == v);
+const bool JSON::operator !=(const unsigned char& c) const {
+	return !(*this == c);
 }
 
-const bool JSON::operator !=(const string_variant& v) const {
+const bool JSON::operator !=(const int& i) const {
+	return !(*this == i);
+}
 
-	return !(*this == v);
+const bool JSON::operator !=(const unsigned int& i) const {
+	return !(*this == i);
+}
+
+const bool JSON::operator !=(const long& l) const {
+	return !(*this == l);
+}
+
+const bool JSON::operator !=(const unsigned long& l) const {
+	return !(*this == l);
+}
+
+const bool JSON::operator !=(const long long& ll) const {
+	return !(*this == ll);
+}
+
+const bool JSON::operator !=(const unsigned long long& ll) const {
+	return !(*this == ll);
+}
+
+const bool JSON::operator !=(const long double& ld) const {
+	return !(*this == ld);
+}
+
+const bool JSON::operator !=(const double& d) const {
+	return !(*this == d);
+}
+
+const bool JSON::operator !=(const float& f) const {
+	return !(*this == f);
+}
+
+const bool JSON::operator !=(const std::string& s) const {
+	return !(*this == s);
+}
+
+const bool JSON::operator !=(const char* s) const {
+	return !(*this == std::string(s));
 }
 
 const bool JSON::operator !=(const std::nullptr_t& n) const {
@@ -186,29 +302,82 @@ JSON& JSON::operator +=(const std::initializer_list<std::pair<std::string, JSON>
 	return *this;
 }
 
-JSON& JSON::operator =(const number_variant& v) {
-
-	long long ll = JSON::to_number(v);
+JSON& JSON::operator =(const char& c) {
+	long long ll = (long long)c;
 	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
 	return *this;
 }
 
-JSON& JSON::operator =(const float_variant& v) {
+JSON& JSON::operator =(const unsigned char& c) {
+	long long ll = (long long)c;
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+	return *this;
+}
 
-	long double ld = JSON::to_float(v);
+JSON& JSON::operator =(const int& i) {
+	long long ll = (long long)i;
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+	return *this;
+}
+
+JSON& JSON::operator =(const unsigned int& i) {
+	long long ll = (long long)i;
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+	return *this;
+}
+
+JSON& JSON::operator =(const long& l) {
+	long long ll = (long long)l;
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+	return *this;
+}
+
+JSON& JSON::operator =(const unsigned long& l) {
+	long long ll = (long long)l;
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+	return *this;
+}
+
+JSON& JSON::operator =(const long long& ll) {
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
+	return *this;
+}
+
+JSON& JSON::operator =(const unsigned long long& ll) {
+	long long _ll = (long long)ll;
+	this -> emplace<long long>(std::forward<decltype(_ll)>(_ll));
+	return *this;
+}
+
+JSON& JSON::operator =(const long double& ld) {
 	this -> emplace<long double>(std::forward<decltype(ld)>(ld));
 	return *this;
 }
 
-JSON& JSON::operator =(const string_variant& v) {
+JSON& JSON::operator =(const double& d) {
+	long double ld = (long double)d;
+	this -> emplace<long double>(std::forward<decltype(ld)>(ld));
+	return *this;
+}
 
-	std::string s = JSON::to_string(v);
+JSON& JSON::operator =(const float& f) {
+	long double ld = (long double)f;
+	this -> emplace<long double>(std::forward<decltype(ld)>(ld));
+	return *this;
+}
+
+JSON& JSON::operator =(const std::string& s) {
 	this -> emplace<std::string>(std::forward<decltype(s)>(s));
 	return *this;
 }
 
-JSON& JSON::operator =(const bool& b) {
+JSON& JSON::operator =(const char* s) {
+	std::string _s(s);
+	this -> emplace<std::string>(std::forward<decltype(_s)>(_s));
+	return *this;
+}
 
+JSON& JSON::operator =(const bool& b) {
 	this -> emplace<bool>(std::forward<decltype(b)>(b));
 	return *this;
 }

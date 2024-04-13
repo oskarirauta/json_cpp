@@ -414,9 +414,7 @@ JSON::JSON(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 	}
 }
 
-JSON JSON::parse(const string_variant& v) {
-
-	std::string s = JSON::to_string(v);
+JSON JSON::parse(const std::string& s) {
 
 	JSON::ERROR ec;
 	size_t pos = 0;
@@ -426,4 +424,18 @@ JSON JSON::parse(const string_variant& v) {
 		throw JSON::exception(ec);
 
 	return json;
+}
+
+JSON JSON::parse(const char* s) {
+
+	std::string _s(s);
+	JSON j;
+
+	try {
+		j = JSON::parse(_s);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+
+	return j;
 }

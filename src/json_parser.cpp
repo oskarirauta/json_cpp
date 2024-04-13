@@ -414,7 +414,9 @@ JSON::JSON(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 	}
 }
 
-JSON JSON::parse(const std::string& s) {
+JSON JSON::parse(const string_variant& v) {
+
+	std::string s = JSON::to_string(v);
 
 	JSON::ERROR ec;
 	size_t pos = 0;

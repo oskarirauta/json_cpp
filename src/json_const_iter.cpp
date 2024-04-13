@@ -151,7 +151,7 @@ const std::string JSON::const_iterator::RESULT::to_string() const {
 	}
 }
 
-double JSON::const_iterator::RESULT::to_float() const {
+long double JSON::const_iterator::RESULT::to_float() const {
 
 	try {
 		if ( this -> indexed())
@@ -165,28 +165,14 @@ double JSON::const_iterator::RESULT::to_float() const {
 	}
 }
 
-double JSON::const_iterator::RESULT::to_double() const {
+long long JSON::const_iterator::RESULT::to_number() const {
 
 	try {
 		if ( this -> indexed())
-			return std::get<std::pair<size_t, JSON>>(*this).second.to_double();
+			return std::get<std::pair<size_t, JSON>>(*this).second.to_number();
 		else if ( this -> named())
-			return std::get<std::pair<std::string, JSON>>(*this).second.to_double();
-		else return std::get<JSON>(*this).to_double();
-
-	} catch ( const JSON::exception& e ) {
-		throw e;
-	}
-}
-
-long long JSON::const_iterator::RESULT::to_int() const {
-
-	try {
-		if ( this -> indexed())
-			return std::get<std::pair<size_t, JSON>>(*this).second.to_int();
-		else if ( this -> named())
-			return std::get<std::pair<std::string, JSON>>(*this).second.to_int();
-		else return std::get<JSON>(*this).to_int();
+			return std::get<std::pair<std::string, JSON>>(*this).second.to_number();
+		else return std::get<JSON>(*this).to_number();
 
 	} catch ( const JSON::exception& e ) {
 		throw e;
@@ -216,7 +202,16 @@ JSON::const_iterator::RESULT::operator std::string() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator double() const {
+JSON::const_iterator::RESULT::operator float() const {
+
+	try {
+		return (float)this -> to_float();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::const_iterator::RESULT::operator long double() const {
 
 	try {
 		return this -> to_float();
@@ -225,10 +220,64 @@ JSON::const_iterator::RESULT::operator double() const {
 	}
 }
 
+JSON::const_iterator::RESULT::operator double() const {
+
+	try {
+		return (double)this -> to_float();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::const_iterator::RESULT::operator char() const {
+
+	try {
+		return (char)this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::const_iterator::RESULT::operator unsigned char() const {
+
+	try {
+		return (unsigned char)this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::const_iterator::RESULT::operator long() const {
+
+	try {
+		return (long)this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::const_iterator::RESULT::operator unsigned long() const {
+
+	try {
+		return (unsigned long)this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
 JSON::const_iterator::RESULT::operator long long() const {
 
 	try {
-		return this -> to_int();
+		return this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::const_iterator::RESULT::operator unsigned long long() const {
+
+	try {
+		return (unsigned long long)this -> to_number();
 	} catch ( const JSON::exception& e ) {
 		throw e;
 	}
@@ -237,7 +286,16 @@ JSON::const_iterator::RESULT::operator long long() const {
 JSON::const_iterator::RESULT::operator int() const {
 
 	try {
-		return this -> to_int();
+		return (int)this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::const_iterator::RESULT::operator unsigned int() const {
+
+	try {
+		return (unsigned int)this -> to_number();
 	} catch ( const JSON::exception& e ) {
 		throw e;
 	}

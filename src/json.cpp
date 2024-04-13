@@ -17,43 +17,19 @@ JSON::JSON(const bool& b) {
 	this -> emplace<bool>(std::forward<decltype(b)>(b));
 }
 
-JSON::JSON(const int& i) {
-	long long l = (long long)i;
-	this -> emplace<long long>(std::forward<decltype(l)>(l));
+JSON::JSON(const number_variant& v) {
+	unsigned ll = JSON::to_number(v);
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
 }
 
-JSON::JSON(const long long& l) {
-	this -> emplace<long long>(std::forward<decltype(l)>(l));
+JSON::JSON(const float_variant& v) {
+	unsigned ld = JSON::to_float(v);
+	this -> emplace<long double>(std::forward<decltype(ld)>(ld));
 }
 
-JSON::JSON(const uint64_t& i) {
-
-	long long l = (long long)i;
-	this -> emplace<long long>(std::forward<decltype(l)>(l));
-}
-
-JSON::JSON(const int64_t& i) {
-
-	long long l = (long long)i;
-	this -> emplace<long long>(std::forward<decltype(l)>(l));
-}
-
-JSON::JSON(const double& d) {
-	this -> emplace<double>(std::forward<decltype(d)>(d));
-}
-
-JSON::JSON(const float& f) {
-	double d = (double)f;
-	this -> emplace<double>(std::forward<decltype(d)>(d));
-}
-
-JSON::JSON(const std::string& s) {
+JSON::JSON(const string_variant& v) {
+	std::string s = JSON::to_string(v);
 	this -> emplace<std::string>(std::forward<decltype(s)>(s));
-}
-
-JSON::JSON(const char* s) {
-	std::string _s(s);
-	this -> emplace<std::string>(std::forward<decltype(_s)>(_s));
 }
 
 JSON::JSON(const std::map<std::string, JSON>& m) {
@@ -76,8 +52,8 @@ JSON::JSON(const JSON& other) {
 		std::string s = std::get<std::string>(other);
 		this -> emplace<std::string>(std::forward<decltype(s)>(s));
 	} else if ( other == FLOAT ) {
-		double d = std::get<double>(other);
-		this -> emplace<double>(std::forward<decltype(d)>(d));
+		long double d = std::get<long double>(other);
+		this -> emplace<long double>(std::forward<decltype(d)>(d));
 	} else if ( other == INT ) {
 		long long l = std::get<long long>(other);
 		this -> emplace<long long>(std::forward<decltype(l)>(l));
@@ -95,7 +71,7 @@ const JSON::TYPE JSON::type() const {
 	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) return OBJECT;
 	else if ( std::holds_alternative<std::vector<JSON>>(*this)) return ARRAY;
 	else if ( std::holds_alternative<std::string>(*this)) return STRING;
-	else if ( std::holds_alternative<double>(*this)) return FLOAT;
+	else if ( std::holds_alternative<long double>(*this)) return FLOAT;
 	else if ( std::holds_alternative<long long>(*this)) return INT;
 	else if ( std::holds_alternative<bool>(*this)) return BOOL;
 	else if ( std::holds_alternative<std::nullptr_t>(*this)) return NULLPTR;
@@ -107,7 +83,7 @@ const bool JSON::operator ==(const TYPE type) const {
 	if ( type == OBJECT && std::holds_alternative<std::map<std::string, JSON>>(*this)) return true;
 	else if ( type == ARRAY && std::holds_alternative<std::vector<JSON>>(*this)) return true;
 	else if ( type == STRING && std::holds_alternative<std::string>(*this)) return true;
-	else if ( type == FLOAT && std::holds_alternative<double>(*this)) return true;
+	else if ( type == FLOAT && std::holds_alternative<long double>(*this)) return true;
 	else if ( type == INT && std::holds_alternative<long long>(*this)) return true;
 	else if ( type == BOOL && std::holds_alternative<bool>(*this)) return true;
 	else if ( type == NULLPTR && std::holds_alternative<std::nullptr_t>(*this)) return true;
@@ -119,70 +95,49 @@ const bool JSON::operator !=(const TYPE type) const {
 	return operator ==(type) ? false : true;
 }
 
+const bool JSON::operator ==(const number_variant& v) const {
+
+	return *this == INT && this -> to_number() == JSON::to_number(v);
+}
+
+const bool JSON::operator ==(const float_variant& v) const {
+
+	return *this == FLOAT && this -> to_float() == JSON::to_float(v);
+}
+
+const bool JSON::operator ==(const string_variant& v) const {
+
+	return *this == STRING && this -> to_string() == JSON::to_string(v);
+}
+
 const bool JSON::operator ==(const bool& b) const {
 
-	if ( *this == BOOL && this -> to_bool() == b )
-		return true;
-	return false;
-}
-
-const bool JSON::operator ==(const int& i) const {
-
-	if ( *this == INT && this -> to_int() == (long long)i )
-		return true;
-	return false;
-}
-
-const bool JSON::operator ==(const long long& l) const {
-
-	if ( *this == INT && this -> to_int() == l )
-		return true;
-	return false;
-}
-
-const bool JSON::operator ==(const uint64_t& i) const {
-
-	return this -> operator ==((long long)i);
-}
-
-const bool JSON::operator ==(const int64_t& i) const {
-
-	return this -> operator ==((long long)i);
-}
-
-const bool JSON::operator ==(const double& d) const {
-
-	if ( *this == FLOAT && this -> to_float() == d )
-		return true;
-	return false;
-}
-
-const bool JSON::operator ==(const float& f) const {
-
-	if ( *this == FLOAT && this -> to_float() == (double)f )
-		return true;
-	return false;
-}
-
-const bool JSON::operator ==(const std::string& s) const {
-
-	if ( *this == STRING && this -> to_string() == s )
-		return true;
-	return false;
-}
-
-const bool JSON::operator ==(const char* s) const {
-
-	if ( *this == STRING && this -> to_string() == std::string(s))
-		return true;
-	return false;
+	return *this == BOOL && this -> to_bool() == b;
 }
 
 const bool JSON::operator ==(const std::nullptr_t& n) const {
 
-	if ( *this == NULLPTR )
-		return true;
-	return false;
+	return *this == NULLPTR;
+}
+
+const bool JSON::operator !=(const number_variant& v) const {
+
+	return !(*this == v);
+}
+
+const bool JSON::operator !=(const float_variant& v) const {
+
+	return !(*this == v);
+}
+
+const bool JSON::operator !=(const string_variant& v) const {
+
+	return !(*this == v);
+}
+
+const bool JSON::operator !=(const std::nullptr_t& n) const {
+
+	return *this != NULLPTR;
 }
 
 JSON& JSON::operator =(const JSON& other) {
@@ -197,8 +152,8 @@ JSON& JSON::operator =(const JSON& other) {
 		std::string s = std::get<std::string>(other);
 		this -> emplace<std::string>(std::forward<decltype(s)>(s));
 	} else if ( other == FLOAT ) {
-		double d = std::get<double>(other);
-		this -> emplace<double>(std::forward<decltype(d)>(d));
+		long double d = std::get<long double>(other);
+		this -> emplace<long double>(std::forward<decltype(d)>(d));
 	} else if ( other == INT ) {
 		long long l = std::get<long long>(other);
 		this -> emplace<long long>(std::forward<decltype(l)>(l));
@@ -231,17 +186,24 @@ JSON& JSON::operator +=(const std::initializer_list<std::pair<std::string, JSON>
 	return *this;
 }
 
-JSON& JSON::operator =(const uint64_t& i) {
+JSON& JSON::operator =(const number_variant& v) {
 
-	long long l = (long long)i;
-	this -> emplace<long long>(std::forward<decltype(l)>(l));
+	long long ll = JSON::to_number(v);
+	this -> emplace<long long>(std::forward<decltype(ll)>(ll));
 	return *this;
 }
 
-JSON& JSON::operator =(const int64_t& i) {
+JSON& JSON::operator =(const float_variant& v) {
 
-	long long l = (long long)i;
-	this -> emplace<long long>(std::forward<decltype(l)>(l));
+	long double ld = JSON::to_float(v);
+	this -> emplace<long double>(std::forward<decltype(ld)>(ld));
+	return *this;
+}
+
+JSON& JSON::operator =(const string_variant& v) {
+
+	std::string s = JSON::to_string(v);
+	this -> emplace<std::string>(std::forward<decltype(s)>(s));
 	return *this;
 }
 
@@ -251,27 +213,9 @@ JSON& JSON::operator =(const bool& b) {
 	return *this;
 }
 
-JSON& JSON::operator =(const int& i) {
+JSON& JSON::operator [](const string_variant& v) {
 
-	long long l = (long long)i;
-	this -> emplace<long long>(std::forward<decltype(l)>(l));
-	return *this;
-}
-
-JSON& JSON::operator =(const std::string& s) {
-
-	this -> emplace<std::string>(std::forward<decltype(s)>(s));
-	return *this;
-}
-
-JSON& JSON::operator =(const char* s) {
-
-	std::string _s = s;
-	this -> emplace<std::string>(std::forward<decltype(_s)>(_s));
-	return *this;
-}
-
-JSON& JSON::operator [](const std::string& key) {
+	std::string key = JSON::to_string(v);
 
 	if ( !std::holds_alternative<std::map<std::string, JSON>>(*this)) {
 		std::map<std::string, JSON> m;
@@ -281,17 +225,9 @@ JSON& JSON::operator [](const std::string& key) {
 	return std::get<std::map<std::string, JSON>>(*this)[key];
 }
 
-JSON& JSON::operator [](const char* key) {
+JSON& JSON::operator [](const number_variant& v) {
 
-	if ( !std::holds_alternative<std::map<std::string, JSON>>(*this)) {
-		std::map<std::string, JSON> m;
-		this -> emplace<std::map<std::string, JSON>>(std::forward<decltype(m)>(m));
-	}
-
-	return std::get<std::map<std::string, JSON>>(*this)[std::string(key)];
-}
-
-JSON& JSON::operator [](const size_t index) {
+	size_t index = (size_t)JSON::to_number(v);
 
 	if ( !std::holds_alternative<std::vector<JSON>>(*this)) {
 		std::vector<JSON> a;
@@ -304,11 +240,9 @@ JSON& JSON::operator [](const size_t index) {
 	} else return std::get<std::vector<JSON>>(*this)[index];
 }
 
-JSON& JSON::operator [](const int index) {
-	return operator[]((size_t)index);
-}
+const JSON JSON::operator [](const string_variant& v) const {
 
-const JSON JSON::operator [](const std::string& key) const {
+	std::string key = JSON::to_string(v);
 
 	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {
 		std::map<std::string, JSON> m = std::get<std::map<std::string, JSON>>(*this);
@@ -316,15 +250,9 @@ const JSON JSON::operator [](const std::string& key) const {
 	} else throw JSON::exception(JSON::ERROR_CODE::OBJECT_SUBSCRIPT_FAIL);
 }
 
-const JSON JSON::operator [](const char* key) const {
+const JSON JSON::operator [](const number_variant& v) const {
 
-	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {
-		std::map<std::string, JSON> m = std::get<std::map<std::string, JSON>>(*this);
-		return m[std::string(key)];
-	} else throw JSON::exception(JSON::ERROR_CODE::OBJECT_SUBSCRIPT_FAIL);
-}
-
-const JSON JSON::operator [](const size_t index) const {
+	size_t index = (size_t)JSON::to_number(v);
 
 	std::vector<JSON> a;
 	if ( std::holds_alternative<std::vector<JSON>>(*this)) {
@@ -335,11 +263,9 @@ const JSON JSON::operator [](const size_t index) const {
 	} else throw JSON::exception(JSON::ERROR_CODE::ARRAY_SUBSCRIPT_FAIL);
 }
 
-const JSON JSON::operator [](const int index) const {
-	return operator[]((size_t) index);
-}
+JSON& JSON::at(const string_variant& v) {
 
-JSON& JSON::at(const std::string& key) {
+	std::string key = JSON::to_string(v);
 
 	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {
 		if ( this -> contains(key))
@@ -351,20 +277,13 @@ JSON& JSON::at(const std::string& key) {
 						JSON::describe(this -> type()));
 }
 
-JSON& JSON::at(const char* key) {
+JSON& JSON::at(const number_variant& v) {
 
-	try {
-		return this -> at(std::string(key));
-	} catch ( const JSON::exception& e ) {
-		throw e;
-	}
-}
-
-JSON& JSON::at(const size_t index) {
+	size_t index = JSON::to_number(v);
 
 	if ( std::holds_alternative<std::vector<JSON>>(*this)) {
 		if ( this -> size() > index )
-			return operator[](index);
+			return operator[](v);
 		else throw JSON::exception(JSON::ERROR_CODE::ARRAY_SUBSCRIPT_RANGE_ERROR,
 				"subscript failure with .at(index), index " + std::to_string(index) + " is out of bounds(" +
 						std::to_string(this -> size()) + ")");
@@ -373,16 +292,9 @@ JSON& JSON::at(const size_t index) {
 						JSON::describe(this -> type()));
 }
 
-JSON& JSON::at(const int index) {
+const JSON JSON::at(const string_variant& v) const {
 
-	try {
-		return this -> at((size_t) index);
-	} catch ( const JSON::exception& e ) {
-		throw e;
-	}
-}
-
-const JSON JSON::at(const std::string& key) const {
+	std::string key = JSON::to_string(v);
 
 	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {
 		if ( this -> contains(key))
@@ -394,35 +306,19 @@ const JSON JSON::at(const std::string& key) const {
 						JSON::describe(this -> type()));
 }
 
-const JSON JSON::at(const char* key) const {
+const JSON JSON::at(const number_variant& v) const {
 
-	try {
-		return this -> at(std::string(key));
-	} catch ( const JSON::exception& e ) {
-		throw e;
-	}
-}
-
-const JSON JSON::at(const size_t index) const {
+	size_t index = (size_t)JSON::to_number(v);
 
 	if ( std::holds_alternative<std::vector<JSON>>(*this)) {
 		if ( this -> size() > index )
-			return operator[](index);
+			return operator[](v);
 		else throw JSON::exception(JSON::ERROR_CODE::ARRAY_SUBSCRIPT_RANGE_ERROR,
 				"subscript failure with .at(index), index " + std::to_string(index) + " is out " +
 						"bounds(" + std::to_string(this -> size()) + ")");
 	} else throw JSON::exception(JSON::ERROR_CODE::INVALID_ARRAY_SUBSCRIPT,
 				"subscript failure with .at(index), function can be used only for arrays, this is " +
 						JSON::describe(this -> type()));
-}
-
-const JSON JSON::at(const int index) const {
-
-	try {
-		return this -> at((size_t) index);
-	} catch ( const JSON::exception& e ) {
-		throw e;
-	}
 }
 
 const std::size_t JSON::length() const {
@@ -448,7 +344,10 @@ const bool JSON::empty() const {
 	else return *this == NULLPTR ? true : false;
 }
 
-const bool JSON::contains(const std::string& key) const {
+const bool JSON::contains(const string_variant& v) const {
+
+	std::string key = JSON::to_string(v);
+
 	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {
 		const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this);
 		if ( m -> find(key) != m -> end()) return true;
@@ -467,23 +366,23 @@ const std::string JSON::to_string() const {
 
 	if ( *this == NULLPTR ) return "null";
 	else if ( *this == STRING ) return std::get<std::string>(*this);
-	else if ( *this == FLOAT ) return std::to_string(std::get<double>(*this));
+	else if ( *this == FLOAT ) return std::to_string(std::get<long double>(*this));
 	else if ( *this == INT ) return std::to_string(std::get<long long>(*this));
 	else if ( *this == BOOL ) return std::get<bool>(*this) ? "true" : "false";
 	else if ( *this == OBJECT || *this == ARRAY ) return this -> dump(true);
 	else throw JSON::exception(JSON::ERROR_CODE::STRING_CONVERSION_FAILED);
 }
 
-double JSON::to_float() const {
+long double JSON::to_float() const {
 
 	if ( *this == NULLPTR ) return 0;
-	else if ( *this == FLOAT ) return std::get<double>(*this);
-	else if ( *this == INT ) return (double)std::get<long long>(*this);
+	else if ( *this == FLOAT ) return std::get<long double>(*this);
+	else if ( *this == INT ) return (long double)std::get<long long>(*this);
 	else if ( *this == BOOL ) return std::get<bool>(*this) ? 1 : 0;
 	else if ( *this == STRING ) {
 		double d = -1;
 		try {
-			d = std::stod(std::get<std::string>(*this));
+			d = std::stold(std::get<std::string>(*this));
 		} catch ( const std::invalid_argument& e ) {
 			throw JSON::exception(JSON::ERROR_CODE::FLOAT_CONVERSION_INVALID,
 						"json conversion to float failed, value \"" + std::get<std::string>(*this) +
@@ -501,19 +400,10 @@ double JSON::to_float() const {
 	else throw JSON::exception(JSON::ERROR_CODE::FLOAT_CONVERSION_ERROR);
 }
 
-double JSON::to_double() const {
-
-	try {
-		return this -> to_float();
-	} catch ( const JSON::exception& e ) {
-		throw e;
-	}
-}
-
-long long JSON::to_int() const {
+long long JSON::to_number() const {
 
 	if ( *this == NULLPTR ) return 0;
-	else if ( *this == FLOAT ) return (long long)std::get<double>(*this);
+	else if ( *this == FLOAT ) return (long long)std::get<long double>(*this);
 	else if ( *this == INT ) return std::get<long long>(*this);
 	else if ( *this == BOOL ) return std::get<bool>(*this) ? 1 : 0;
 	else if ( *this == STRING ) {
@@ -540,7 +430,7 @@ long long JSON::to_int() const {
 bool JSON::to_bool() const {
 
 	if ( *this == NULLPTR ) return false;
-	else if ( *this == FLOAT ) return (long long)std::get<double>(*this) == 0 ? false : true;
+	else if ( *this == FLOAT ) return (long long)std::get<long double>(*this) == 0 ? false : true;
 	else if ( *this == INT ) return std::get<long long>(*this) == 0 ? false : true;
 	else if ( *this == BOOL ) return std::get<bool>(*this);
 	else if ( *this == STRING ) {
@@ -583,7 +473,16 @@ JSON::operator std::string() const {
 	}
 }
 
-JSON::operator double() const {
+JSON::operator float() const {
+
+	try {
+		return (float)this -> to_float();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::operator long double() const {
 
 	try {
 		return this -> to_float();
@@ -592,10 +491,64 @@ JSON::operator double() const {
 	}
 }
 
+JSON::operator double() const {
+
+	try {
+		return (double)this -> to_float();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::operator char() const {
+
+	try {
+		return (char)this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::operator unsigned char() const {
+
+	try {
+		return (unsigned char)this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::operator long() const {
+
+	try {
+		return (long)this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::operator unsigned long() const {
+
+	try {
+		return (unsigned long)this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
 JSON::operator long long() const {
 
 	try {
-		return this -> to_int();
+		return this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::operator unsigned long long() const {
+
+	try {
+		return (unsigned long long)this -> to_number();
 	} catch ( const JSON::exception& e ) {
 		throw e;
 	}
@@ -604,7 +557,16 @@ JSON::operator long long() const {
 JSON::operator int() const {
 
 	try {
-		return (int)this -> to_int();
+		return (int)this -> to_number();
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+JSON::operator unsigned int() const {
+
+	try {
+		return (unsigned int)this -> to_number();
 	} catch ( const JSON::exception& e ) {
 		throw e;
 	}
@@ -632,7 +594,9 @@ void JSON::clear() {
 					" element type cannot be cleared");
 }
 
-void JSON::erase(const std::string& key) {
+void JSON::erase(const string_variant& v) {
+
+	std::string key = JSON::to_string(v);
 
 	if ( *this == OBJECT ) {
 		if ( this -> contains(key))
@@ -642,7 +606,9 @@ void JSON::erase(const std::string& key) {
 	} else throw JSON::exception(JSON::ERROR_CODE::ELEMENT_CANNOT_ERASE_KEY);
 }
 
-void JSON::erase(const size_t index) {
+void JSON::erase(const number_variant& v) {
+
+	size_t index = JSON::to_number(v);
 
 	if ( *this == OBJECT ) {
 		std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this);
@@ -663,15 +629,6 @@ void JSON::erase(const size_t index) {
 		} else throw JSON::exception(JSON::ERROR_CODE::ERASE_FAILED_NO_INDEX,
 						"erase failed, index " + std::to_string(index) + " is out of array's bounds");
 	} else throw JSON::exception(JSON::ERROR_CODE::ELEMENT_CANNOT_ERASE_INDEX);
-}
-
-void JSON::erase(const int index) {
-
-	try {
-		this -> erase((size_t)index);
-	} catch ( const JSON::exception& e ) {
-		throw e;
-	}
 }
 
 void JSON::append(const JSON& json) {
@@ -730,15 +687,11 @@ void JSON::clear() const {
 	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "function clear is not available for const JSON");
 }
 
-void JSON::erase(const std::string& key) const {
+void JSON::erase(const string_variant& key) const {
 	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "function erase is not available for const JSON");
 }
 
-void JSON::erase(const size_t index) const {
-	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "function erase is not available for const JSON");
-}
-
-void JSON::erase(const int index) const {
+void JSON::erase(const number_variant& index) const {
 	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "function erase is not available for const JSON");
 }
 

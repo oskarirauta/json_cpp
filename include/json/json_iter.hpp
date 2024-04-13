@@ -15,7 +15,9 @@ struct JSON::iterator {
 
 	class RESULT : public std::variant<std::pair<std::string, JSON*>, std::pair<size_t, JSON*>, JSON*> {
 
-		public: using variant::variant;
+		public:
+
+		using variant::variant;
 
 		const JSON::TYPE type() const;
 		const bool operator ==(const JSON::TYPE type) const;
@@ -30,15 +32,22 @@ struct JSON::iterator {
 		const std::size_t size() const;
 		const bool empty() const;
 		const std::string to_string() const;
-		double to_float() const;
-		double to_double() const;
-		long long to_int() const;
+		long double to_float() const;
+		long long to_number() const;
 		bool to_bool() const;
 
 		operator std::string() const;
+		operator float() const;
+		operator long double() const;
 		operator double() const;
+		operator char() const;
+		operator unsigned char() const;
+		operator long() const;
+		operator unsigned long() const;
 		operator long long() const;
+		operator unsigned long long() const;
 		operator int() const;
+		operator unsigned int() const;
 		operator bool() const;
 
 		friend std::ostream& operator <<(std::ostream& os, const JSON::iterator::RESULT& res);

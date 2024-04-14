@@ -1,5 +1,6 @@
-JSON_DIR?=json
-INCLUDES += -I./$(JSON_DIR)/include
+JSON_DIR?=./json
+INCLUDES += -I$(JSON_DIR)/include
+
 JSON_OBJS:= \
         objs/json.o \
 	objs/json_conv.o \

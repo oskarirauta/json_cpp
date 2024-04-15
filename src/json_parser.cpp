@@ -191,7 +191,7 @@ JSON JSON::parse_string(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 					int unicode_value;
 
 					try {
-						unicode_value = std::stod(unicode);
+						unicode_value = std::stold(unicode);
 					} catch ( const std::exception& e ) {
 						ec = { .code = JSON::ERROR_CODE::INVALID_UNICODE, .pos = pos, .coords = make_coords(s, pos) };
 						return nullptr;
@@ -248,42 +248,71 @@ JSON JSON::parse_number(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 
 	if ( s[pos] == '0' && s[pos + 1] == 'x' ) {
 		is_hex = true;
-		value += "0x";
 		pos += 2;
 	}
 
-	while ( std::isdigit(s[pos]) || ( s[pos] == '.'  && value.find_first_of('.') == std::string::npos ))
-		value += s[pos++];
+	if ( !is_hex ) {
 
-	if ( value.back() == '.' )
-		value.pop_back();
-	else if ( value.find_first_of('.') != std::string::npos )
-		is_float = true;
+		while ( std::isdigit(s[pos]) || ( s[pos] == '.'  && value.find_first_of('.') == std::string::npos ))
+			value += s[pos++];
 
-	while ( value.length() > 1 && value[0] == '0' && std::isdigit(value[1]))
-		value = value.substr(1, value.length() - 1);
+	} else {
 
-	if ( std::tolower(s[pos]) == 'e') {
+		if ( value.substr(0, 2) == "0." || value.substr(0, 3) == "-0." ) {
 
-		exp_pos = pos;
-		pos++;
-		while ( std::isdigit(s[pos]))
-			exp += s[pos++];
+			ec = { .code = JSON::ERROR_CODE::HEX_FLOAT, .pos = begin, .coords = make_coords(s, begin) };
+			return nullptr;
+		}
 
-		if ( exp.empty())
-			ec = { .code = JSON::ERROR_CODE::EXP_MISSING, .pos = pos, .coords = make_coords(s, pos) };
+		while ( std::string("1234567890abcdef").find(std::tolower(s[pos])) != std::string::npos )
+			value += std::tolower(s[pos++]);
+
+		while ( std::isspace(s[pos]))
+			pos++;
+
+		if ( std::tolower(s[pos]) == 'e' ) {
+			ec = { .code = JSON::ERROR_CODE::HEX_EXP, .pos = pos, .coords = make_coords(s, pos) };
+			return nullptr;
+		}
+
+		if ( std::tolower(s[pos]) == '.' ) {
+			ec = { .code = JSON::ERROR_CODE::HEX_FLOAT, .pos = pos, .coords = make_coords(s, pos) };
+			return nullptr;
+		}
 	}
 
-	if ( value.empty() && exp.empty()) {
+	if ( !is_hex ) {
 
-		ec = { .code = JSON::ERROR_CODE::END_OF_BLOB, .pos = pos, .coords = make_coords(s, pos) };
-		return nullptr;
+		if ( value.back() == '.' )
+			value.pop_back();
+		else if ( value.find_first_of('.') != std::string::npos )
+			is_float = true;
 
-	} else if ( std::string(" \t,]}").find_first_of(s[pos]) == std::string::npos ) {
+		while ( value.length() > 1 && value[0] == '0' && std::isdigit(value[1]))
+			value = value.substr(1, value.length() - 1);
 
-		ec = { .code = JSON::ERROR_CODE::ILLEGAL_NUMBER, .pos = begin, .coords = make_coords(s, pos) };
-		return nullptr;
+		if ( std::tolower(s[pos]) == 'e') {
 
+			exp_pos = pos;
+			pos++;
+			while ( std::isdigit(s[pos]))
+				exp += s[pos++];
+
+			if ( exp.empty())
+				ec = { .code = JSON::ERROR_CODE::EXP_MISSING, .pos = pos, .coords = make_coords(s, pos) };
+		}
+
+		if ( value.empty() && exp.empty()) {
+
+			ec = { .code = JSON::ERROR_CODE::END_OF_BLOB, .pos = pos, .coords = make_coords(s, pos) };
+			return nullptr;
+
+		} else if ( std::string(" \t,]}").find_first_of(s[pos]) == std::string::npos ) {
+
+			ec = { .code = JSON::ERROR_CODE::ILLEGAL_NUMBER, .pos = begin, .coords = make_coords(s, pos) };
+			return nullptr;
+
+		}
 	}
 
 	long long e;
@@ -309,7 +338,7 @@ JSON JSON::parse_number(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 
 		double d;
 		try {
-			d = std::stod(value);
+			d = std::stold(value);
 		} catch ( const std::invalid_argument& e ) {
 			ec = { .code = JSON::ERROR_CODE::ILLEGAL_NUMBER, .pos = begin, .coords = make_coords(s, begin) };
 			return nullptr;
@@ -326,16 +355,18 @@ JSON JSON::parse_number(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 	} else {
 
 		long long ll;
+
 		try {
-			if ( is_hex ) {
-				long double ld = std::stold(value); // stoll does not support 0x for hex..
-				ll = (long long)ld;
-			} else ll = std::stoll(value);
+			ll = std::stoll(value, nullptr, is_hex ? 16 : 10);
 		} catch ( const std::invalid_argument& e ) {
-			ec = { .code = JSON::ERROR_CODE::ILLEGAL_NUMBER, .pos = begin, .coords = make_coords(s, begin) };
+
+			ec = { .code = is_hex ? JSON::ERROR_CODE::ILLEGAL_HEX_NUMBER : JSON::ERROR_CODE::ILLEGAL_NUMBER,
+				.pos = begin, .coords = make_coords(s, begin) };
 			return nullptr;
 		} catch ( const std::out_of_range& e ) {
-			ec = { .code = JSON::ERROR_CODE::INT_OUT_OF_RANGE, .pos = exp_pos, .coords = make_coords(s, exp_pos) };
+
+			ec = { .code = is_hex ? JSON::ERROR_CODE::HEX_OUT_OF_RANGE : JSON::ERROR_CODE::INT_OUT_OF_RANGE,
+				.pos = exp_pos, .coords = make_coords(s, exp_pos) };
 			ll = 0;
 		}
 

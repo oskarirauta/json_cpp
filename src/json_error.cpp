@@ -49,7 +49,11 @@ static std::map<JSON::ERROR_CODE, std::string> error_descriptions = {
 	{ JSON::ERROR_CODE::INSERT_ARRAY_FAILED, "insert failed, function is available only for array types" },
 	{ JSON::ERROR_CODE::APPEND_OBJECT_FAILED, "append failed, function is available only for object types" },
 	{ JSON::ERROR_CODE::INSERT_OBJECT_FAILED, "insert failed, function is available only for object types" },
-	{ JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "this function is not available for const JSON" }
+	{ JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "this function is not available for const JSON" },
+	{ JSON::ERROR_CODE::HEX_EXP, "exponent is not supported with hexadecimal values" },
+	{ JSON::ERROR_CODE::HEX_FLOAT, "hexadecimal values do not support floats" },
+	{ JSON::ERROR_CODE::ILLEGAL_HEX_NUMBER, "hexadecimal number value is garbage" },
+	{ JSON::ERROR_CODE::HEX_OUT_OF_RANGE, "hexadecimal number conversion failed, out of range" }
 
 };
 

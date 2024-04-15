@@ -82,7 +82,7 @@ const std::string JSON::unescape(const std::string& s) {
 
 					int n;
 					try {
-						n = std::stoi(sequence, nullptr, 16);
+						n = std::stoll(sequence, nullptr, 16);
 					} catch ( const std::exception& e) {
 						out += "\\u" + sequence;
 						sequence = "";
@@ -162,7 +162,7 @@ const bool JSON::is_convertible(const JSON::TYPE& to) const {
 		else if ( *this == STRING ) {
 
 			try {
-				std::stod(std::get<std::string>(*this));
+				std::stold(std::get<std::string>(*this));
 			} catch ( const std::exception& e ) {
 				return false;
 			}

@@ -4,6 +4,7 @@
     "two",
     "three",
     5,
+    0xffff,
     true,
     1.910000,
     {

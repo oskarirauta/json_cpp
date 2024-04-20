@@ -575,11 +575,27 @@ const std::string JSON::to_lower(const std::string& s) {
 	return _s;
 }
 
+static const std::string f_to_string(const long double& d) {
+
+	std::stringstream ss;
+	ss << std::fixed << d;
+	std::string s = ss.str();
+	if ( s.find_first_of('.') != std::string::npos ) {
+
+		while ( s.back() == '0' )
+			s.pop_back();
+
+		if ( s.back() == '.' )
+			s.pop_back();
+	}
+	return s;
+}
+
 const std::string JSON::to_string() const {
 
 	if ( *this == NULLPTR ) return "null";
 	else if ( *this == STRING ) return std::get<std::string>(*this);
-	else if ( *this == FLOAT ) return std::to_string(std::get<long double>(*this));
+	else if ( *this == FLOAT ) return f_to_string(std::get<long double>(*this));
 	else if ( *this == INT ) return std::to_string(std::get<long long>(*this));
 	else if ( *this == BOOL ) return std::get<bool>(*this) ? "true" : "false";
 	else if ( *this == OBJECT || *this == ARRAY ) return this -> dump(true);

@@ -14,7 +14,7 @@
     },
     "THREE",
     "append1",
-    "append2"
+    "append2",
   ],
   "arr2": [
     [
@@ -39,5 +39,5 @@
     "name": "John Doe"
   },
   "value": 0.500000,
-  "xyz": "THR"
+  "xyz": "THR",
 }

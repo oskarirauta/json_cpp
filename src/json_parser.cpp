@@ -74,6 +74,17 @@ JSON JSON::parse_array(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 		if ( s[pos] == ',' ) {
 
 			pos++;
+
+			size_t backup_pos = pos;
+			consume_ws(s, pos);
+
+			if ( s[pos] == ']' ) {
+
+				pos++;
+				break;
+
+			} else pos = backup_pos;
+
 			continue;
 
 		} else if ( s[pos] == ']' ) {
@@ -142,6 +153,17 @@ JSON JSON::parse_object(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 		if ( s[pos] == ',' ) {
 
 			pos++;
+
+			size_t backup_pos = pos;
+			consume_ws(s, pos);
+
+			if ( s[pos] == '}' ) {
+
+				pos++;
+				break;
+
+			} else pos = backup_pos;
+
 			continue;
 
 		} else if ( s[pos] == '}' ) {

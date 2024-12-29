@@ -14,186 +14,462 @@ JSON::const_iterator JSON::end() const {
 	return JSON::const_iterator(this, this -> empty() ? 1 : this -> size());
 }
 
-const JSON::const_iterator::RESULT& JSON::const_iterator::operator *() const {
+JSON::const_iterator JSON::cbegin() {
 
-	if ( std::holds_alternative<std::map<std::string, JSON>>(*this -> v)) {
+	return (( *this == OBJECT || *this == ARRAY ) && this -> empty()) ?
+		JSON::const_iterator(this, 1) : JSON::const_iterator(this, 0);
+}
+
+JSON::const_iterator JSON::cend() {
+
+	return JSON::const_iterator(this, this -> empty() ? 1 : this -> size());
+}
+
+const bool JSON::const_iterator::is_object() const {
+
+	return std::holds_alternative<std::map<std::string, JSON>>(*this -> v);
+}
+
+const bool JSON::const_iterator::is_array() const {
+
+	return std::holds_alternative<std::vector<JSON>>(*this -> v);
+}
+
+const JSON& JSON::const_iterator::operator *() {
+
+	if ( this -> is_object()) {
 
 		const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this -> v);
 		auto it = m -> begin();
 		std::advance(it, idx);
-		this -> result = std::make_pair(it -> first, it -> second);
+		return it -> second.as_const();
 
-	} else if ( std::holds_alternative<std::vector<JSON>>(*this -> v)) {
+	} else if ( this -> is_array()) {
 
 		const std::vector<JSON>* a = &std::get<std::vector<JSON>>(*this -> v);
-		this -> result = std::make_pair(idx, a -> at(idx));
+		return a -> at(idx).as_const();
+	}
 
-	} else this -> result = this -> v;
-
-	return result;
+	return this -> v -> as_const();
 }
 
-const JSON::const_iterator::RESULT* JSON::const_iterator::operator ->() const {
+const JSON* JSON::const_iterator::operator ->() {
 
-	if ( std::holds_alternative<std::map<std::string, JSON>>(*this -> v)) {
+	if ( this -> is_object()) {
 
 		const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this -> v);
 		auto it = m -> begin();
 		std::advance(it, idx);
-		this -> result = std::make_pair(it -> first, it -> second);
+		return &it -> second.as_const();
 
-	} else if ( std::holds_alternative<std::vector<JSON>>(*this -> v)) {
+	} else if ( this -> is_array()) {
 
 		const std::vector<JSON>* a = &std::get<std::vector<JSON>>(*this -> v);
-		this -> result = std::make_pair(idx, a -> at(idx));
+		return &a -> at(idx).as_const();
+	}
 
-	} else this -> result = this -> v;
-
-	return &result;
+	return &this -> v -> as_const();
 }
 
-const JSON::TYPE JSON::const_iterator::RESULT::type() const {
 
-	if ( this -> indexed())
-		return std::get<std::pair<size_t, JSON>>(*this).second.type();
-	else if ( this -> named())
-		return std::get<std::pair<std::string, JSON>>(*this).second.type();
-	else return std::get<JSON>(*this).type();
+const bool JSON::const_iterator::indexed() const {
+
+	return this -> is_array();
 }
 
-const bool JSON::const_iterator::RESULT::operator ==(const JSON::TYPE type) const {
+const bool JSON::const_iterator::named() const {
 
-	if ( this -> indexed())
-		return std::get<std::pair<size_t, JSON>>(*this).second.type() == type;
-	else if ( this -> named())
-		return std::get<std::pair<std::string, JSON>>(*this).second.type() == type;
-	else return std::get<JSON>(*this).type() == type;
+	return this -> is_object();
 }
 
-const bool JSON::const_iterator::RESULT::operator !=(const JSON::TYPE type) const {
+const size_t JSON::const_iterator::index() const {
 
-	return operator ==(type) ? false : true;
+	return this -> is_array() ? this -> idx : -1;
 }
 
-const bool JSON::const_iterator::RESULT::named() const {
+const std::string JSON::const_iterator::name() const {
 
-	return std::holds_alternative<std::pair<std::string, JSON>>(*this);
-}
-
-const bool JSON::const_iterator::RESULT::indexed() const {
-
-	return std::holds_alternative<std::pair<size_t, JSON>>(*this);
-}
-
-const size_t JSON::const_iterator::RESULT::index() const {
-
-	if ( !this -> indexed())
-		return -1;
-
-	return std::get<std::pair<size_t, JSON>>(*this).first;
-}
-
-const std::string JSON::const_iterator::RESULT::name() const {
-
-	if ( !this -> named())
+	if ( !this -> is_object())
 		return "";
 
-	return std::get<std::pair<std::string, JSON>>(*this).first;
+	const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this -> v);
+	auto it = m -> begin();
+	std::advance(it, idx);
+	return it -> first;
 }
 
-const JSON JSON::const_iterator::RESULT::value() const {
+const std::string JSON::const_iterator::key() const {
 
-	if ( this -> indexed())
-		return std::get<std::pair<size_t, JSON>>(*this).second;
-	else if ( this -> named())
-		return std::get<std::pair<std::string, JSON>>(*this).second;
-	else return std::get<JSON>(*this);
+	return this -> name();
 }
 
-const size_t JSON::const_iterator::RESULT::length() const {
+const size_t JSON::const_iterator::size() const {
 
-	if ( this -> indexed())
-		return std::get<std::pair<size_t, JSON>>(*this).second.length();
-	else if ( this -> named())
-		return std::get<std::pair<std::string, JSON>>(*this).second.length();
-	else return std::get<JSON>(*this).length();
+	if ( this -> is_object()) {
+
+		const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this -> v);
+		return m -> size();
+
+	} else if ( this -> is_array()) {
+
+		const std::vector<JSON>* a = &std::get<std::vector<JSON>>(*this -> v);
+		return a -> size();
+
+	}
+
+	return this -> v -> size();
 }
 
-const size_t JSON::const_iterator::RESULT::size() const {
+const size_t JSON::const_iterator::length() const {
 
-	if ( this -> indexed())
-		return std::get<std::pair<size_t, JSON>>(*this).second.size();
-	else if ( this -> named())
-		return std::get<std::pair<std::string, JSON>>(*this).second.size();
-	else return std::get<JSON>(*this).size();
+	if ( this -> is_object()) {
+
+		const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this -> v);
+		return m -> size();
+
+	} else if ( this -> is_array()) {
+
+		const std::vector<JSON>* a = &std::get<std::vector<JSON>>(*this -> v);
+		return a -> size();
+
+	}
+
+	return this -> v -> length();
 }
 
-const bool JSON::const_iterator::RESULT::empty() const {
+const JSON& JSON::const_iterator::const_value() const {
 
-	if ( *this == OBJECT || *this == ARRAY )
-		return this -> size() == 0;
-	else if ( *this == STRING )
+	if ( this -> is_object()) {
+
+		const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this -> v);
+		auto it = m -> begin();
+		std::advance(it, idx);
+		return it -> second.as_const();
+
+	} else if ( this -> is_array()) {
+
+		const std::vector<JSON>* a = &std::get<std::vector<JSON>>(*this -> v);
+		return a -> at(idx).as_const();
+	}
+
+	return this -> v -> as_const();
+}
+
+const JSON& JSON::const_iterator::value() const {
+
+	if ( this -> is_object()) {
+
+		const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this -> v);
+		auto it = m -> begin();
+		std::advance(it, idx);
+		return it -> second.as_const();
+
+	} else if ( this -> is_array()) {
+
+		const std::vector<JSON>* a = &std::get<std::vector<JSON>>(*this -> v);
+		return a -> at(idx).as_const();
+	}
+
+	return this -> v -> as_const();
+}
+
+const JSON::TYPE JSON::const_iterator::type() const {
+
+	return this -> const_value().type();
+}
+
+const bool JSON::const_iterator::operator ==(const JSON::TYPE type) const {
+
+	return this -> type() == type;
+}
+
+const bool JSON::const_iterator::operator !=(const JSON::TYPE type) const {
+
+	return this -> type() != type;
+}
+
+const bool JSON::const_iterator::operator ==(const char& c) const {
+
+	return this -> const_value() == c;
+}
+
+const bool JSON::const_iterator::operator ==(const unsigned char& c) const {
+
+	return this -> const_value() == c;
+}
+
+const bool JSON::const_iterator::operator ==(const int& i) const {
+
+	return this -> const_value() == i;
+}
+
+const bool JSON::const_iterator::operator ==(const unsigned int& i) const {
+
+	return this -> const_value() == i;
+}
+
+const bool JSON::const_iterator::operator ==(const long& l) const {
+
+	return this -> const_value() == l;
+}
+
+const bool JSON::const_iterator::operator ==(const unsigned long& l) const {
+
+	return this -> const_value() == l;
+}
+
+const bool JSON::const_iterator::operator ==(const long long& ll) const {
+
+	return this -> const_value() == ll;
+}
+
+const bool JSON::const_iterator::operator ==(const unsigned long long& ll) const {
+
+	return this -> const_value() == ll;
+}
+
+const bool JSON::const_iterator::operator ==(const long double& ld) const {
+
+	return this -> const_value() == ld;
+}
+
+const bool JSON::const_iterator::operator ==(const double& d) const {
+
+	return this -> const_value() == d;
+}
+
+const bool JSON::const_iterator::operator ==(const float& f) const {
+
+	return this -> const_value() == f;
+}
+
+const bool JSON::const_iterator::operator ==(const std::string& s) const {
+
+	return this -> const_value() == s;
+}
+
+const bool JSON::const_iterator::operator ==(const char* s) const {
+
+	return this -> const_value() == s;
+}
+
+const bool JSON::const_iterator::operator ==(const std::nullptr_t& n) const {
+
+	return this -> const_value() == n;
+}
+
+const bool JSON::const_iterator::operator !=(const char& c) const {
+
+	return this -> const_value() != c;
+}
+
+const bool JSON::const_iterator::operator !=(const unsigned char& c) const {
+
+	return this -> const_value() != c;
+}
+
+const bool JSON::const_iterator::operator !=(const int& i) const {
+
+	return this -> const_value() != i;
+}
+
+const bool JSON::const_iterator::operator !=(const unsigned int& i) const {
+
+	return this -> const_value() != i;
+}
+
+const bool JSON::const_iterator::operator !=(const long& l) const {
+
+	return this -> const_value() != l;
+}
+
+const bool JSON::const_iterator::operator !=(const unsigned long& l) const {
+
+	return this -> const_value() != l;
+}
+
+const bool JSON::const_iterator::operator !=(const long long& ll) const {
+
+	return this -> const_value() != ll;
+}
+
+const bool JSON::const_iterator::operator !=(const unsigned long long& ll) const {
+
+	return this -> const_value() != ll;
+}
+
+const bool JSON::const_iterator::operator !=(const long double& ld) const {
+
+	return this -> const_value() != ld;
+}
+
+const bool JSON::const_iterator::operator !=(const double& d) const {
+
+	return this -> const_value() != d;
+}
+
+const bool JSON::const_iterator::operator !=(const float& f) const {
+
+	return this -> const_value() != f;
+}
+
+const bool JSON::const_iterator::operator !=(const std::string& s) const {
+
+	return this -> const_value() != s;
+}
+
+const bool JSON::const_iterator::operator !=(const char* s) const {
+
+	return this -> const_value() != s;
+}
+
+const bool JSON::const_iterator::operator !=(const std::nullptr_t& n) const {
+
+	return this -> const_value() != n;
+}
+
+
+JSON::const_iterator& JSON::const_iterator::operator =(const JSON& other) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "operator = is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator +=(const JSON& other) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "operator += is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator +=(const std::pair<std::string, JSON>& pair) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "operator += is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator +=(const std::initializer_list<std::pair<std::string, JSON>>& list) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "operator += is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const char& c) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const unsigned char& c) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const int& i) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const unsigned int& i) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const long& l) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const unsigned long& l) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const long long& ll) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const unsigned long long& ll) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const long double& ld) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const double& d) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const float& f) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const std::string& s) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const char* s) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const bool& b) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+JSON::const_iterator& JSON::const_iterator::operator =(const std::nullptr_t& n) const {
+
+	throw JSON::exception(JSON::ERROR_CODE::FUNCTION_UNAVAILABLE_FOR_CONST, "assignment is not available for const JSON");
+}
+
+const bool JSON::const_iterator::empty() const {
+
+	if ( this -> is_object() || this -> is_array())
+		return this -> const_value().empty();
+	else if ( this -> type() == JSON::STRING )
 		return this -> to_string().empty();
-	else return *this == NULLPTR ? true : false;
+	else return this -> type() == JSON::NULLPTR;
 }
 
-const std::string JSON::const_iterator::RESULT::to_string() const {
+const std::string JSON::const_iterator::to_string() const {
 
 	try {
-		if ( this -> indexed())
-			return std::get<std::pair<size_t, JSON>>(*this).second.to_string();
-		else if ( this -> named())
-			return std::get<std::pair<std::string, JSON>>(*this).second.to_string();
-		else return std::get<JSON>(*this).to_string();
-
+		return this -> const_value().to_string();
 	} catch ( const JSON::exception& e ) {
 		throw e;
 	}
 }
 
-long double JSON::const_iterator::RESULT::to_float() const {
+long double JSON::const_iterator::to_float() const {
 
 	try {
-		if ( this -> indexed())
-			return std::get<std::pair<size_t, JSON>>(*this).second.to_float();
-		else if ( this -> named())
-			return std::get<std::pair<std::string, JSON>>(*this).second.to_float();
-		else return std::get<JSON>(*this).to_float();
-
+		return this -> const_value().to_float();
 	} catch ( const JSON::exception& e ) {
 		throw e;
 	}
 }
 
-long long JSON::const_iterator::RESULT::to_number() const {
+long JSON::const_iterator::to_number() const {
 
 	try {
-		if ( this -> indexed())
-			return std::get<std::pair<size_t, JSON>>(*this).second.to_number();
-		else if ( this -> named())
-			return std::get<std::pair<std::string, JSON>>(*this).second.to_number();
-		else return std::get<JSON>(*this).to_number();
-
+		return this -> const_value().to_number();
 	} catch ( const JSON::exception& e ) {
 		throw e;
 	}
 }
 
-bool JSON::const_iterator::RESULT::to_bool() const {
+bool JSON::const_iterator::to_bool() const {
 
 	try {
-		if ( this -> indexed())
-			return std::get<std::pair<size_t, JSON>>(*this).second.to_bool();
-		else if ( this -> named())
-			return std::get<std::pair<std::string, JSON>>(*this).second.to_bool();
-		else return std::get<JSON>(*this).to_bool();
-
+		return this -> const_value().to_bool();
 	} catch ( const JSON::exception& e ) {
 		throw e;
 	}
 }
 
-JSON::const_iterator::RESULT::operator std::string() const {
+JSON::const_iterator::operator std::string() const {
 
 	try {
 		return this -> to_string();
@@ -202,7 +478,7 @@ JSON::const_iterator::RESULT::operator std::string() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator float() const {
+JSON::const_iterator::operator float() const {
 
 	try {
 		return (float)this -> to_float();
@@ -211,7 +487,7 @@ JSON::const_iterator::RESULT::operator float() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator long double() const {
+JSON::const_iterator::operator long double() const {
 
 	try {
 		return this -> to_float();
@@ -220,7 +496,7 @@ JSON::const_iterator::RESULT::operator long double() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator double() const {
+JSON::const_iterator::operator double() const {
 
 	try {
 		return (double)this -> to_float();
@@ -229,7 +505,7 @@ JSON::const_iterator::RESULT::operator double() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator char() const {
+JSON::const_iterator::operator char() const {
 
 	try {
 		return (char)this -> to_number();
@@ -238,7 +514,7 @@ JSON::const_iterator::RESULT::operator char() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator unsigned char() const {
+JSON::const_iterator::operator unsigned char() const {
 
 	try {
 		return (unsigned char)this -> to_number();
@@ -247,7 +523,7 @@ JSON::const_iterator::RESULT::operator unsigned char() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator long() const {
+JSON::const_iterator::operator long() const {
 
 	try {
 		return (long)this -> to_number();
@@ -256,7 +532,7 @@ JSON::const_iterator::RESULT::operator long() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator unsigned long() const {
+JSON::const_iterator::operator unsigned long() const {
 
 	try {
 		return (unsigned long)this -> to_number();
@@ -265,7 +541,7 @@ JSON::const_iterator::RESULT::operator unsigned long() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator long long() const {
+JSON::const_iterator::operator long long() const {
 
 	try {
 		return this -> to_number();
@@ -274,7 +550,7 @@ JSON::const_iterator::RESULT::operator long long() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator unsigned long long() const {
+JSON::const_iterator::operator unsigned long long() const {
 
 	try {
 		return (unsigned long long)this -> to_number();
@@ -283,7 +559,7 @@ JSON::const_iterator::RESULT::operator unsigned long long() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator int() const {
+JSON::const_iterator::operator int() const {
 
 	try {
 		return (int)this -> to_number();
@@ -292,7 +568,7 @@ JSON::const_iterator::RESULT::operator int() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator unsigned int() const {
+JSON::const_iterator::operator unsigned int() const {
 
 	try {
 		return (unsigned int)this -> to_number();
@@ -301,7 +577,7 @@ JSON::const_iterator::RESULT::operator unsigned int() const {
 	}
 }
 
-JSON::const_iterator::RESULT::operator bool() const {
+JSON::const_iterator::operator bool() const {
 
 	try {
 		return this -> to_bool();
@@ -310,12 +586,135 @@ JSON::const_iterator::RESULT::operator bool() const {
 	}
 }
 
-std::ostream& operator <<(std::ostream& os, const JSON::const_iterator& c_it) {
-	os << c_it.v -> to_string();
-	return os;
+const bool JSON::const_iterator::contains(const std::string& key) const {
+
+	return this -> const_value().contains(key);
 }
 
-std::ostream& operator <<(std::ostream& os, const JSON::const_iterator::RESULT& c_res) {
-	os << c_res.to_string();
-	return os;
+const bool JSON::const_iterator::is_convertible(const JSON::TYPE& to) const {
+
+	return this -> const_value().is_convertible(to);
+}
+
+const bool JSON::const_iterator::convertible_to(const JSON::TYPE& to) const {
+
+	return this -> const_value().convertible_to(to);
+}
+
+const JSON& JSON::const_iterator::as_const() {
+
+	if ( this -> is_object()) {
+
+		const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this -> v);
+		auto it = m -> begin();
+		std::advance(it, idx);
+		return it -> second.as_const();
+
+	} else if ( this -> is_array()) {
+
+		const std::vector<JSON>* a = &std::get<std::vector<JSON>>(*this -> v);
+		return a -> at(idx).as_const();
+	}
+
+	return this -> v -> as_const();
+}
+
+const JSON& JSON::const_iterator::as_const() const {
+
+	if ( this -> is_object()) {
+
+		const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this -> v);
+		auto it = m -> begin();
+		std::advance(it, idx);
+		return it -> second.as_const();
+
+	} else if ( this -> is_array()) {
+
+		const std::vector<JSON>* a = &std::get<std::vector<JSON>>(*this -> v);
+		return a -> at(idx).as_const();
+	}
+
+	return this -> v -> as_const();
+}
+
+const JSON JSON::const_iterator::operator[](const std::string& key) const {
+
+	try {
+		return this -> const_value().operator[](key);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+const JSON JSON::const_iterator::operator[](const char* key) const {
+
+	try {
+		return this -> const_value().operator[](key);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+const JSON JSON::const_iterator::operator[](size_t index) const {
+
+	try {
+		return this -> const_value().operator[](index);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+const JSON JSON::const_iterator::operator[](int index) const {
+
+	try {
+		return this -> const_value().operator[](index);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+const JSON JSON::const_iterator::at(const std::string& key) const {
+
+	try {
+		return this -> const_value().at(key);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+const JSON JSON::const_iterator::at(const char* key) const {
+
+	try {
+		return this -> const_value().at(key);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+const JSON JSON::const_iterator::at(const size_t index) const {
+
+	try {
+		return this -> const_value().at(index);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+const JSON JSON::const_iterator::at(const int index) const {
+
+	try {
+		return this -> const_value().at(index);
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
+}
+
+std::ostream& operator <<(std::ostream& os, const JSON::const_iterator& it) {
+
+	try {
+		os << it.to_string();
+		return os;
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
 }

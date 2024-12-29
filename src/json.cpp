@@ -382,6 +382,11 @@ JSON& JSON::operator =(const bool& b) {
 	return *this;
 }
 
+JSON& JSON::operator =(const std::nullptr_t& n) {
+	this -> emplace<std::nullptr_t>(std::forward<decltype(nullptr)>(nullptr));
+	return *this;
+}
+
 JSON& JSON::operator [](const std::string& key) {
 
 	if ( !std::holds_alternative<std::map<std::string, JSON>>(*this)) {

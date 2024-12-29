@@ -29,7 +29,8 @@ int main(int argc, char **argv) {
 
 	try {
 		JSON json = JSON::parse(blob);
-		std::cout << json.dump() << std::endl;
+		std::cout << /*"dump:\n" <<*/ json.dump() << std::endl;
+
 	} catch ( const JSON::exception& e ) {
 		std::cout << "ERROR: " << e.what() << std::endl;
 	}

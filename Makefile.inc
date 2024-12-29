@@ -7,6 +7,7 @@ JSON_OBJS:= \
 	objs/json_iter.o \
 	objs/json_dump.o \
 	objs/json_const_iter.o \
+	objs/json_foreach.o \
 	objs/json_parser.o \
 	objs/json_error.o
 
@@ -20,6 +21,9 @@ objs/json_dump.o: $(JSON_DIR)/src/json_dump.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
 
 objs/json_const_iter.o: $(JSON_DIR)/src/json_const_iter.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
+
+objs/json_foreach.o: $(JSON_DIR)/src/json_foreach.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
 
 objs/json_error.o: $(JSON_DIR)/src/json_error.cpp

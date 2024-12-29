@@ -7,23 +7,24 @@
 
 struct JSON::ERROR {
 
-	JSON::ERROR_CODE code = JSON::ERROR_CODE::NO_ERROR;
-	size_t pos = 0;
-	std::pair<size_t, size_t> coords;
+	public:
+		JSON::ERROR_CODE code = JSON::ERROR_CODE::NO_ERROR;
+		size_t pos = 0;
+		std::pair<size_t, size_t> coords;
 
-	ERROR& operator =(const JSON::ERROR_CODE& ec);
-	ERROR& operator =(const JSON::ERROR& other);
+		ERROR& operator =(const JSON::ERROR_CODE& ec);
+		ERROR& operator =(const JSON::ERROR& other);
 
-	bool operator ==(const JSON::ERROR_CODE& ec) const;
-	operator bool() const;
+		bool operator ==(const JSON::ERROR_CODE& ec) const;
+		operator bool() const;
 
-	const size_t row() const;
-	const size_t column() const;
+		const size_t row() const;
+		const size_t column() const;
 
-        static const std::string describe(const JSON::ERROR_CODE& ec);
-	const std::string describe() const;
+        	static const std::string describe(const JSON::ERROR_CODE& ec);
+		const std::string describe() const;
 
-	friend std::ostream& operator <<(std::ostream& os, const JSON::ERROR& e);
+		friend std::ostream& operator <<(std::ostream& os, const JSON::ERROR& e);
 };
 
 class JSON::exception : public std::runtime_error {

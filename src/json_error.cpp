@@ -54,7 +54,6 @@ static std::map<JSON::ERROR_CODE, std::string> error_descriptions = {
 	{ JSON::ERROR_CODE::HEX_FLOAT, "hexadecimal values do not support floats" },
 	{ JSON::ERROR_CODE::ILLEGAL_HEX_NUMBER, "hexadecimal number value is garbage" },
 	{ JSON::ERROR_CODE::HEX_OUT_OF_RANGE, "hexadecimal number conversion failed, out of range" }
-
 };
 
 JSON::ERROR& JSON::ERROR::operator =(const JSON::ERROR_CODE& ec) {

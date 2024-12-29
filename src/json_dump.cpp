@@ -16,7 +16,7 @@ static const std::string const_iterate(const JSON x, const bool pretty, int leve
 
 	std::string out;
 
-	for ( auto& j : x ) {
+	for ( auto j = x.begin(); j != x.end(); j++ ) {
 
 		if ( pretty ) {
 			out += !out.empty() ? ",\n" : "";
@@ -49,7 +49,7 @@ static const std::string iterate(JSON x, const bool pretty, int level) {
 
 	std::string out;
 
-	for ( auto& j : x ) {
+	for ( auto j = x.begin(); j != x.end(); j++ ) {
 
 		if ( pretty ) {
 			out += !out.empty() ? ",\n" : "";
@@ -88,6 +88,7 @@ const std::string JSON::dump(const bool pretty) {
 		return iterate(*this, pretty, 0);
 	else return to_string();
 }
+
 
 const std::string JSON::dump_minified() const {
 	return this -> dump(false);

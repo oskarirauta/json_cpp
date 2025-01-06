@@ -1,3 +1,5 @@
+#include <fstream>
+#include <sstream>
 #include <algorithm>
 #include <stdexcept>
 #include <cmath>
@@ -491,4 +493,39 @@ JSON JSON::parse(const char* s) {
 	}
 
 	return j;
+}
+
+JSON JSON::load(std::ifstream& ifd) {
+
+	if ( !ifd.is_open())
+		throw JSON::exception(JSON::ERROR_CODE::FILE_NOT_OPEN);
+
+	else if ( !ifd.good() || ifd.bad() || ifd.fail()) {
+
+		if ( ifd.is_open())
+			ifd.close();
+
+		throw JSON::exception(JSON::ERROR_CODE::FILE_READ_ERROR);
+
+	} else if ( ifd.eof()) {
+
+		if ( ifd.is_open())
+			ifd.close();
+
+		throw JSON::exception(JSON::ERROR_CODE::FILE_READ_EOF);
+	}
+
+	std::stringstream ss;
+	std::string blob;
+
+	ss << ifd.rdbuf();
+	blob = ss.str();
+	ifd.close();
+
+	try {
+		JSON json = JSON::parse(blob);
+		return json;
+	} catch ( const JSON::exception& e ) {
+		throw e;
+	}
 }

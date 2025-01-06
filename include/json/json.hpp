@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <ostream>
+#include <fstream>
 #include <variant>
 #include <cstdint>
 #include <cstring>
@@ -41,7 +42,9 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 			ERASE_FAILED_NO_INDEX = 126, ELEMENT_CANNOT_ERASE_INDEX = 127,
 			APPEND_ARRAY_FAILED = 128, INSERT_ARRAY_FAILED = 129, APPEND_OBJECT_FAILED = 130, INSERT_OBJECT_FAILED = 131,
 			FUNCTION_UNAVAILABLE_FOR_CONST = 132,
-			HEX_EXP = 133, HEX_FLOAT = 134, ILLEGAL_HEX_NUMBER = 135, HEX_OUT_OF_RANGE = 136
+			HEX_EXP = 133, HEX_FLOAT = 134, ILLEGAL_HEX_NUMBER = 135, HEX_OUT_OF_RANGE = 136,
+
+			FILE_NOT_OPEN = 201, FILE_READ_EOF = 202, FILE_READ_ERROR = 203
 		};
 
 		struct ERROR;
@@ -241,6 +244,7 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 
 		static JSON parse(const std::string& s);
 		static JSON parse(const char* s);
+		static JSON load(std::ifstream& ifd);
 
 		friend std::ostream& operator <<(std::ostream& os, const JSON& json);
 

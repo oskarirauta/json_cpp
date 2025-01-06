@@ -53,7 +53,11 @@ static std::map<JSON::ERROR_CODE, std::string> error_descriptions = {
 	{ JSON::ERROR_CODE::HEX_EXP, "exponent is not supported with hexadecimal values" },
 	{ JSON::ERROR_CODE::HEX_FLOAT, "hexadecimal values do not support floats" },
 	{ JSON::ERROR_CODE::ILLEGAL_HEX_NUMBER, "hexadecimal number value is garbage" },
-	{ JSON::ERROR_CODE::HEX_OUT_OF_RANGE, "hexadecimal number conversion failed, out of range" }
+	{ JSON::ERROR_CODE::HEX_OUT_OF_RANGE, "hexadecimal number conversion failed, out of range" },
+
+	{ JSON::ERROR_CODE::FILE_NOT_OPEN, "failed to parse json from file, input file stream is not open" },
+	{ JSON::ERROR_CODE::FILE_READ_EOF, "failed to parse json from file, unexpected end of file" },
+	{ JSON::ERROR_CODE::FILE_READ_ERROR, "failed to parse json from file, file is not readable" },
 };
 
 JSON::ERROR& JSON::ERROR::operator =(const JSON::ERROR_CODE& ec) {

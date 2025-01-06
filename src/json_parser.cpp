@@ -329,7 +329,7 @@ JSON JSON::parse_number(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 			ec = { .code = JSON::ERROR_CODE::END_OF_BLOB, .pos = pos, .coords = make_coords(s, pos) };
 			return nullptr;
 
-		} else if ( std::string(" \t,]}").find_first_of(s[pos]) == std::string::npos ) {
+		} else if ( value.empty() && std::string(" \t,]}").find_first_of(s[pos]) == std::string::npos ) {
 
 			ec = { .code = JSON::ERROR_CODE::ILLEGAL_NUMBER, .pos = begin, .coords = make_coords(s, pos) };
 			return nullptr;

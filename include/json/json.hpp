@@ -44,7 +44,24 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 			FUNCTION_UNAVAILABLE_FOR_CONST = 132,
 			HEX_EXP = 133, HEX_FLOAT = 134, ILLEGAL_HEX_NUMBER = 135, HEX_OUT_OF_RANGE = 136,
 
-			FILE_NOT_OPEN = 201, FILE_READ_EOF = 202, FILE_READ_ERROR = 203
+			FILE_NOT_OPEN = 201, FILE_READ_EOF = 202, FILE_READ_ERROR = 203,
+
+			PREDICATE_MISMATCH = 301, PREDICATE_REQUIRED_MISSING = 302
+		};
+
+		class PREDICATE {
+
+			public:
+
+				JSON::TYPE type;
+				bool optional = true;
+
+				PREDICATE& operator =(const JSON::TYPE& type);
+
+				bool operator ==(const JSON::TYPE& type) const;
+				bool operator ==(const JSON& json) const;
+				bool operator !=(const JSON::TYPE& type) const;
+				bool operator !=(const JSON& json) const;
 		};
 
 		struct ERROR;
@@ -212,6 +229,8 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 
 		void for_each(const for_each_function lambda);
 		void for_each(const const_for_each_function lambda) const;
+
+		void validate(const std::map<std::string, JSON::PREDICATE>& reqs, const std::string& path = "") const;
 
 		static const std::string escape(const std::string& s);
 		static const std::string unescape(const std::string& s);

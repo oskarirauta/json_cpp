@@ -58,6 +58,10 @@ static std::map<JSON::ERROR_CODE, std::string> error_descriptions = {
 	{ JSON::ERROR_CODE::FILE_NOT_OPEN, "failed to parse json from file, input file stream is not open" },
 	{ JSON::ERROR_CODE::FILE_READ_EOF, "failed to parse json from file, unexpected end of file" },
 	{ JSON::ERROR_CODE::FILE_READ_ERROR, "failed to parse json from file, file is not readable" },
+
+	{ JSON::ERROR_CODE::PREDICATE_MISMATCH, "json cannot be validated to required format" },
+	{ JSON::ERROR_CODE::PREDICATE_REQUIRED_MISSING, "json failed to validate, required key is missing" },
+
 };
 
 JSON::ERROR& JSON::ERROR::operator =(const JSON::ERROR_CODE& ec) {
@@ -140,7 +144,7 @@ const std::string JSON::exception::describe() const {
 	return this -> _e.describe();
 }
 
-const char * JSON::exception::what() const noexcept {
+const char* JSON::exception::what() const noexcept {
 	return this -> _msg.empty() ? this -> _e.describe().c_str() : this -> _msg.c_str();
 }
 

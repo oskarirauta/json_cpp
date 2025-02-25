@@ -12,10 +12,13 @@ foreach_OBJS:= \
 load_OBJS:= \
 	objs/load_example.o
 
+validator_OBJS:= \
+	objs/validator_example.o
+
 JSON_DIR:=.
 include ./Makefile.inc
 
-world: example foreach load
+world: example foreach load validator
 
 $(shell mkdir -p objs)
 
@@ -28,6 +31,9 @@ objs/foreach_example.o: foreach_example.cpp
 objs/load_example.o: load_example.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
 
+objs/validator_example.o: validator_example.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
+
 example: $(JSON_OBJS) $(example_OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@;
 
@@ -37,6 +43,9 @@ foreach: $(JSON_OBJS) $(foreach_OBJS)
 load: $(JSON_OBJS) $(load_OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@;
 
+validator: $(JSON_OBJS) $(validator_OBJS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o $@;
+
 .PHONY: clean
 clean:
-	@rm -rf objs example foreach load
+	@rm -rf objs example foreach load validator

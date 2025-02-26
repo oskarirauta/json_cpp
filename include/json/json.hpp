@@ -46,22 +46,50 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 
 			FILE_NOT_OPEN = 201, FILE_READ_EOF = 202, FILE_READ_ERROR = 203,
 
-			PREDICATE_MISMATCH = 301, PREDICATE_REQUIRED_MISSING = 302
+			PREDICATE_ARRAY_FAIL = 301, PREDICATE_TYPE_FAILURE = 302,
+			PREDICATE_MISMATCH = 303, PREDICATE_REQUIRED_MISSING = 304, PREDICATE_UNALLOWED_VALUE = 305
 		};
 
 		class PREDICATE {
 
+			friend class JSON;
+
 			public:
 
-				JSON::TYPE type;
-				bool optional = true;
+				struct PROPERTIES {
+
+					public:
+						JSON::TYPE type;
+						bool required = false;
+						std::vector<JSON> allowed_values = {};
+				};
 
 				PREDICATE& operator =(const JSON::TYPE& type);
+				PREDICATE& operator =(const JSON::PREDICATE::PROPERTIES& cfg);
 
 				bool operator ==(const JSON::TYPE& type) const;
 				bool operator ==(const JSON& json) const;
 				bool operator !=(const JSON::TYPE& type) const;
 				bool operator !=(const JSON& json) const;
+
+				PREDICATE& require(bool state = true);
+
+				std::string name() const;
+				JSON::TYPE type() const;
+				bool is_required() const;
+				bool is_optional() const;
+				std::vector<JSON>& allowed_values();
+				const std::vector<JSON>& allowed_values() const;
+
+				PREDICATE(const std::string& name, const JSON::TYPE& type) : _name(name), _type(type), _required(false), _allowed_values() {}
+				PREDICATE(const std::string& name, const JSON::PREDICATE::PROPERTIES& cfg) :
+					_name(name), _type(cfg.type), _required(cfg.required), _allowed_values(cfg.allowed_values) {}
+
+			private:
+				std::string _name;
+				JSON::TYPE _type;
+				bool _required = false;
+				std::vector<JSON> _allowed_values = {};
 		};
 
 		struct ERROR;
@@ -230,7 +258,7 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 		void for_each(const for_each_function lambda);
 		void for_each(const const_for_each_function lambda) const;
 
-		void validate(const std::map<std::string, JSON::PREDICATE>& reqs, const std::string& path = "") const;
+		void validate(const std::vector<JSON::PREDICATE>& reqs, const std::string& path = "") const;
 
 		static const std::string escape(const std::string& s);
 		static const std::string unescape(const std::string& s);

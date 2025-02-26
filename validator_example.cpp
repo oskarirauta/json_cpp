@@ -20,11 +20,12 @@ int main(int argc, char **argv) {
 
 	try {
 		json.validate({
-			{ "optional_missing_element", { JSON::OBJECT }},
-			{ "arr", { JSON::ARRAY, false }},
-			{ "arr2", { JSON::ARRAY, false }},
-			{ "hello", { JSON::INT }},
-			{ "missing", { .type = JSON::STRING, .optional = true }}
+			{ "optional_missing_object", JSON::OBJECT },
+			{ "arr", { .type = JSON::ARRAY, .required = true }},
+			{ "arr2", { .type = JSON::ARRAY, .required = false }},
+			{ "hello", { .type = JSON::STRING, .required = false, .allowed_values = { "THI", "JSO" }}},
+			{ "hello2", JSON::OBJECT },
+			{ "missing", { .type = JSON::STRING, .required = true }}
 		});
 	} catch ( const JSON::exception& e ) {
 		std::cout << "VALIDATION FAILED: " << e.what() << std::endl;

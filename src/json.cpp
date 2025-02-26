@@ -573,6 +573,18 @@ const bool JSON::contains(const std::string& key) const {
 	return false;
 }
 
+const bool JSON::contains_any(const std::set<std::string>& keys) const {
+
+	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {
+
+		const std::map<std::string, JSON>* m = &std::get<std::map<std::string, JSON>>(*this);
+
+		for ( const std::string& key : keys )
+			if ( m -> find(key) != m -> end()) return true;
+	}
+	return false;
+}
+
 const std::string JSON::to_lower(const std::string& s) {
 
 	std::string _s(s);

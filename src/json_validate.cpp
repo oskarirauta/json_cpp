@@ -5,7 +5,8 @@ JSON::PREDICATE& JSON::PREDICATE::operator =(const JSON::TYPE& type) {
 
 	this -> _type = type;
 	this -> _required = false;
-	this -> _allowed_values.clear();
+	this -> _values.clear();
+	this -> _validate.clear();
 	return *this;
 }
 
@@ -13,7 +14,8 @@ JSON::PREDICATE& JSON::PREDICATE::operator =(const JSON::PREDICATE::PROPERTIES& 
 
 	this -> _type = cfg.type;
 	this -> _required = cfg.required;
-	this -> _allowed_values = cfg.allowed_values;;
+	this -> _values = cfg.values;
+	this -> _validate = cfg.validate;
 	return *this;
 }
 
@@ -63,17 +65,36 @@ bool JSON::PREDICATE::is_optional() const {
 	return !this -> _required;
 }
 
-std::vector<JSON>& JSON::PREDICATE::allowed_values() {
+std::vector<JSON>& JSON::PREDICATE::values() {
 
-	return this -> _allowed_values;
+	return this -> _values;
 }
 
-const std::vector<JSON>& JSON::PREDICATE::allowed_values() const {
+const std::vector<JSON>& JSON::PREDICATE::values() const {
 
-	return this -> _allowed_values;
+	return this -> _values;
 }
 
-void JSON::validate(const std::vector<JSON::PREDICATE>& reqs, const std::string& path) const {
+std::vector<JSON::PREDICATE>& JSON::PREDICATE::validate() {
+
+	return this -> _validate;
+}
+
+const std::vector<JSON::PREDICATE>& JSON::PREDICATE::validate() const {
+
+	return this -> _validate;
+}
+
+static std::string make_path(const std::vector<std::string>& path, const std::string d) {
+
+	std::string s;
+	for ( auto& _d : path )
+		s += ( !s.empty() ? " -> " : "" ) + _d;
+
+	return s + ( !s.empty() && !d.empty() ? " -> " : "" ) + ( !d.empty() ? d : "" );
+}
+
+void JSON::validate(const std::vector<JSON::PREDICATE>& reqs, const std::vector<std::string>& path) const {
 
 	if ( this -> type() == JSON::TYPE::ARRAY )
 		throw JSON::exception(JSON::ERROR_CODE::PREDICATE_ARRAY_FAIL);
@@ -81,25 +102,27 @@ void JSON::validate(const std::vector<JSON::PREDICATE>& reqs, const std::string&
 	for ( const JSON::PREDICATE& p : reqs ) {
 
 		if ( this -> contains(p._name) && p != this -> at(p._name))
-			throw JSON::exception(JSON::ERROR_CODE::PREDICATE_MISMATCH, "\"" + path + p._name + "\" value mismatch, expected type is " +
+			throw JSON::exception(JSON::ERROR_CODE::PREDICATE_MISMATCH, "\"" + make_path(path, p._name) + "\" value mismatch, expected type is " +
 				JSON::describe(p._type) + ", found " + JSON::describe(this -> at(p._name).type()));
 		else if ( p._required && !this -> contains(p._name))
-			throw JSON::exception(JSON::ERROR_CODE::PREDICATE_REQUIRED_MISSING, "required \"" + path + p._name + "\" was not found");
+			throw JSON::exception(JSON::ERROR_CODE::PREDICATE_REQUIRED_MISSING, "required \"" + make_path(path, p._name) + "\" was not found");
+		else if ( p._type != JSON::TYPE::OBJECT && !p._validate.empty() )
+			throw JSON::exception(JSON::ERROR_CODE::PREDICATE_VALIDATOR_TYPE_MISMATCH, "child validation predicate can only be applied on object type");
 
-		if ( this -> contains(p._name) && !p._allowed_values.empty() && ( p._type != JSON::OBJECT && p._type != JSON::ARRAY && p._type != JSON::NULLPTR )) {
+		if ( this -> contains(p._name) && !p._values.empty() && ( p._type != JSON::OBJECT && p._type != JSON::ARRAY && p._type != JSON::NULLPTR )) {
 
 			bool matched = false;
 			std::string allowed_list;
 			size_t idx = 0;
 
-			for ( const JSON& value : p._allowed_values ) {
+			for ( const JSON& value : p._values ) {
 
 				if ( value.type() != p._type )
 					throw JSON::exception(JSON::ERROR_CODE::PREDICATE_TYPE_FAILURE);
 
 				idx++;
 				if ( !allowed_list.empty())
-					allowed_list += idx == p._allowed_values.size() ? " and " : ", ";
+					allowed_list += idx == p._values.size() ? " and " : ", ";
 				allowed_list += "\"" + value.to_string() + "\"";
 
 				if ( p._type == JSON::TYPE::STRING && value.to_string() == this -> at(p._name).to_string())
@@ -113,8 +136,20 @@ void JSON::validate(const std::vector<JSON::PREDICATE>& reqs, const std::string&
 			}
 
 			if ( !matched )
-				throw JSON::exception(JSON::ERROR_CODE::PREDICATE_UNALLOWED_VALUE, "\"" + path + p._name + "\" value \"" +
+				throw JSON::exception(JSON::ERROR_CODE::PREDICATE_UNALLOWED_VALUE, "\"" + make_path(path, p._name) + "\" value \"" +
 					this -> at(p._name).to_string() + "\" does not match with allowed values: " + allowed_list);
+
+		} else if ( this -> contains(p._name) && p._type == JSON::OBJECT && !p._validate.empty() && !this -> at(p._name).empty()) {
+
+			std::vector<std::string> _path = path;
+			_path.push_back(p._name);
+
+			try {
+				this -> at(p._name).validate(p._validate, _path);
+			} catch ( const JSON::exception& e ) {
+				throw e;
+			}
 		}
+
 	}
 }

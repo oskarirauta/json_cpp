@@ -97,3 +97,51 @@ const std::string JSON::dump_minified() const {
 const std::string JSON::dump_minified() {
 	return this -> dump(false);
 }
+
+const std::string JSON::describe(const JSON::PREDICATE& predicate, int level) {
+
+	std::string s = tab(level);
+
+	s += "{ \"" + predicate._name + "\": { .type = " + JSON::describe(predicate._type);
+	s += std::string(", .required = ") + ( predicate._required ? "true" : "false" );
+
+	if ( predicate._type != JSON::OBJECT && predicate._type != JSON::ARRAY && !predicate._values.empty()) {
+
+		std::string v;
+		s += ", .values = {\n";
+
+		for ( const JSON& j : predicate._values )
+			v += ( !v.empty() ? ",\n" : "" ) + tab(level + 2) + j.to_string();
+
+		s += v + "\n" + tab(level) + "}}";
+
+	} else if ( predicate._type == JSON::OBJECT && !predicate._validate.empty()) {
+
+		s += ", .validate = {\n";
+		s += JSON::describe(predicate._validate, level + 2 ) + "\n" + tab(level) + "}}";
+
+	} else s += " }";
+
+	s += "}";
+	return s;
+}
+
+const std::string JSON::describe(const std::vector<JSON::PREDICATE>& predicates, int level) {
+
+	std::string s;
+	for ( const JSON::PREDICATE& predicate : predicates )
+		s += ( !s.empty() ? ",\n" : "" ) + describe(predicate, level);
+
+	return s;
+}
+
+
+const std::string JSON::describe(const std::vector<JSON::PREDICATE>& predicates) {
+
+	return JSON::describe(predicates, 0);
+}
+
+const std::string JSON::describe(const JSON::PREDICATE& predicate) {
+
+	return JSON::describe(predicate, 0);
+}

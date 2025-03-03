@@ -47,8 +47,8 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 
 			FILE_NOT_OPEN = 201, FILE_READ_EOF = 202, FILE_READ_ERROR = 203,
 
-			PREDICATE_ARRAY_FAIL = 301, PREDICATE_TYPE_FAILURE = 302,
-			PREDICATE_MISMATCH = 303, PREDICATE_REQUIRED_MISSING = 304, PREDICATE_UNALLOWED_VALUE = 305
+			PREDICATE_ARRAY_FAIL = 301, PREDICATE_TYPE_FAILURE = 302, PREDICATE_VALIDATOR_TYPE_MISMATCH = 303,
+			PREDICATE_MISMATCH = 304, PREDICATE_REQUIRED_MISSING = 305, PREDICATE_UNALLOWED_VALUE = 306
 		};
 
 		class PREDICATE {
@@ -62,7 +62,8 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 					public:
 						JSON::TYPE type;
 						bool required = false;
-						std::vector<JSON> allowed_values = {};
+						std::vector<JSON> values = {};
+						std::vector<JSON::PREDICATE> validate = {};
 				};
 
 				PREDICATE& operator =(const JSON::TYPE& type);
@@ -79,18 +80,24 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 				JSON::TYPE type() const;
 				bool is_required() const;
 				bool is_optional() const;
-				std::vector<JSON>& allowed_values();
-				const std::vector<JSON>& allowed_values() const;
+				std::vector<JSON>& values();
+				const std::vector<JSON>& values() const;
+				std::vector<PREDICATE>& validate();
+				const std::vector<PREDICATE>& validate() const;
 
-				PREDICATE(const std::string& name, const JSON::TYPE& type) : _name(name), _type(type), _required(false), _allowed_values() {}
+				PREDICATE(const std::string& name, const JSON::TYPE& type) :
+					_name(name), _type(type), _required(false), _values(), _validate() {}
 				PREDICATE(const std::string& name, const JSON::PREDICATE::PROPERTIES& cfg) :
-					_name(name), _type(cfg.type), _required(cfg.required), _allowed_values(cfg.allowed_values) {}
+					_name(name), _type(cfg.type), _required(cfg.required), _values(cfg.values), _validate(cfg.validate) {}
+
+				friend std::ostream& operator <<(std::ostream& os, const JSON::PREDICATE& predicate);
 
 			private:
 				std::string _name;
 				JSON::TYPE _type;
 				bool _required = false;
-				std::vector<JSON> _allowed_values = {};
+				std::vector<JSON> _values = {};
+				std::vector<JSON::PREDICATE> _validate = {};
 		};
 
 		struct ERROR;
@@ -260,13 +267,15 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 		void for_each(const for_each_function lambda);
 		void for_each(const const_for_each_function lambda) const;
 
-		void validate(const std::vector<JSON::PREDICATE>& reqs, const std::string& path = "") const;
+		void validate(const std::vector<JSON::PREDICATE>& reqs, const std::vector<std::string>& path = {}) const;
 
 		static const std::string escape(const std::string& s);
 		static const std::string unescape(const std::string& s);
 		static const std::string to_lower(const std::string& s);
 		static const std::string trim_special_chars(const std::string& s);
 		static const std::string describe(const JSON::TYPE& type);
+		static const std::string describe(const JSON::PREDICATE& predicate);
+		static const std::string describe(const std::vector<JSON::PREDICATE>& predicates);
 
 		JSON();
 		JSON(const bool& b);
@@ -303,6 +312,9 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 		static const std::map<std::string::value_type, std::string> escape_chars;
 		static const std::map<std::string::value_type, std::string::value_type> unescape_chars;
 
+		static const std::string describe(const JSON::PREDICATE& predicate, int level);
+		static const std::string describe(const std::vector<JSON::PREDICATE>& predicates, int level);
+
 		static JSON parse_nullptr(const std::string& s, size_t& pos, JSON::ERROR& ec);
 		static JSON parse_object(const std::string& s, size_t& pos, JSON::ERROR& ec);
 		static JSON parse_string(const std::string& s, size_t& pos, JSON::ERROR& ec);
@@ -316,4 +328,6 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 };
 
 std::ostream& operator <<(std::ostream& os, const JSON::TYPE& type);
+std::ostream& operator <<(std::ostream& os, const JSON::PREDICATE& predicate);
+std::ostream& operator <<(std::ostream& os, const std::vector<JSON::PREDICATE>& predicates);
 std::ostream& operator <<(std::ostream& os, const JSON& json);

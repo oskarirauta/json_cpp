@@ -217,6 +217,16 @@ std::ostream& operator <<(std::ostream& os, const JSON::TYPE& type) {
 	return os;
 }
 
+std::ostream& operator <<(std::ostream& os, const JSON::PREDICATE& predicate) {
+	os << JSON::describe(predicate);
+	return os;
+}
+
+std::ostream& operator <<(std::ostream& os, const std::vector<JSON::PREDICATE>& predicates) {
+	os << JSON::describe(predicates);
+	return os;
+}
+
 std::ostream& operator <<(std::ostream& os, const JSON& json) {
 	os << json.to_string();
 	return os;

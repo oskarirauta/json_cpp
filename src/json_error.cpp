@@ -61,6 +61,7 @@ static std::map<JSON::ERROR_CODE, std::string> error_descriptions = {
 
 	{ JSON::ERROR_CODE::PREDICATE_ARRAY_FAIL, "cannot validate arrays" },
 	{ JSON::ERROR_CODE::PREDICATE_TYPE_FAILURE, "mis-configured predicate, allowed values must match with predicate's type" },
+	{ JSON::ERROR_CODE::PREDICATE_VALIDATOR_TYPE_MISMATCH, "child validation predicate can only be applied on object type" },
 	{ JSON::ERROR_CODE::PREDICATE_MISMATCH, "json cannot be validated to required format" },
 	{ JSON::ERROR_CODE::PREDICATE_REQUIRED_MISSING, "json failed to validate, required key is missing" },
 	{ JSON::ERROR_CODE::PREDICATE_UNALLOWED_VALUE, "json failed to validate, values does not match with allowed values" },

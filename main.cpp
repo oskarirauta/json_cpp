@@ -41,8 +41,8 @@ int main(int argc, char **argv) {
 		std::vector<std::string> path = { "hello2", "hello", "this" };
 		std::vector<std::string> path2 = { "hello2", "hello2", "not_this" };
 
-		std::cout << "\n\ntesting if traversable path " << make_path(path) << " exists: " << ( json.contains(path) ? "true" : "false" ) << std::endl;
-		std::cout << "testing if traversable path " << make_path(path2) << " exists: " << ( json.contains(path2) ? "true" : "false" ) << std::endl;
+		std::cout << "\n\ntesting if traversable path " << make_path(path) << " exists: " << ( json.contains_path(path) ? "true" : "false" ) << std::endl;
+		std::cout << "testing if traversable path " << make_path(path2) << " exists: " << ( json.contains_path(path2) ? "true" : "false" ) << std::endl;
 
 	} catch ( const JSON::exception& e ) {
 		std::cout << "ERROR: " << e.what() << std::endl;

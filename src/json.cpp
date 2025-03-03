@@ -573,7 +573,7 @@ const bool JSON::contains(const std::string& key) const {
 	return false;
 }
 
-const bool JSON::contains(const std::vector<std::string>& path) const {
+const bool JSON::contains_path(const std::vector<std::string>& path) const {
 
 	JSON it = *this;
 

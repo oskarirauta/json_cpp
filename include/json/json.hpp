@@ -208,7 +208,7 @@ class JSON : public std::variant<std::map<std::string, JSON>, std::vector<JSON>,
 		const std::size_t size() const;
 		const bool empty() const;
 		const bool contains(const std::string& key) const;
-		const bool contains(const std::vector<std::string>& path) const;
+		const bool contains_path(const std::vector<std::string>& path) const;
 		const bool contains_any(const std::set<std::string>& keys) const;
 
 		const std::string to_string() const;

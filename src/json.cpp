@@ -573,6 +573,20 @@ const bool JSON::contains(const std::string& key) const {
 	return false;
 }
 
+const bool JSON::contains(const std::vector<std::string>& path) const {
+
+	JSON it = *this;
+
+	for ( const std::string& key : path ) {
+
+		if ( it.contains(key))
+			it = it.at(key);
+		else return false;
+	}
+
+	return true;
+}
+
 const bool JSON::contains_any(const std::set<std::string>& keys) const {
 
 	if ( std::holds_alternative<std::map<std::string, JSON>>(*this)) {

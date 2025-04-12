@@ -640,7 +640,7 @@ long double JSON::to_float() const {
 	else if ( *this == INT ) return (long double)std::get<long long>(*this);
 	else if ( *this == BOOL ) return std::get<bool>(*this) ? 1 : 0;
 	else if ( *this == STRING ) {
-		double d = -1;
+		long double d = -1;
 		try {
 			d = std::stold(std::get<std::string>(*this));
 		} catch ( const std::invalid_argument& e ) {

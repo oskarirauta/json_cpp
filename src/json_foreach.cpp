@@ -12,7 +12,7 @@ bool JSON::fe_iterator::is_array() const {
 }
 
 size_t JSON::fe_iterator::index() const {
-	return this -> indexed() ? std::get<size_t>(*this) : -1;
+	return this -> indexed() ? std::get<size_t>(*this) : static_cast<size_t>(-1);
 }
 
 std::string JSON::fe_iterator::name() const {

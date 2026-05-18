@@ -61,12 +61,12 @@ JSON::JSON(const long double& ld) {
 }
 
 JSON::JSON(const double& d) {
-	long long ld = (long double)d;
+	long double ld = (long double)d;
 	this -> emplace<long double>(std::forward<decltype(ld)>(ld));
 }
 
 JSON::JSON(const float& f) {
-	long long ld = (long double)f;
+	long double ld = (long double)f;
 	this -> emplace<long double>(std::forward<decltype(ld)>(ld));
 }
 
@@ -525,8 +525,8 @@ const JSON JSON::at(const size_t index) const {
 		if ( this -> size() > index )
 			return operator[](index);
 		else throw JSON::exception(JSON::ERROR_CODE::ARRAY_SUBSCRIPT_RANGE_ERROR,
-				"subscript failure with .at(index), index " + std::to_string(index) + " is out " +
-						"bounds(" + std::to_string(this -> size()) + ")");
+				"subscript failure with .at(index), index " + std::to_string(index) + " is out of bounds(" +
+						std::to_string(this -> size()) + ")");
 	} else throw JSON::exception(JSON::ERROR_CODE::INVALID_ARRAY_SUBSCRIPT,
 				"subscript failure with .at(index), function can be used only for arrays, this is " +
 						JSON::describe(this -> type()));
@@ -720,7 +720,7 @@ bool JSON::to_bool() const {
 	} else if ( *this == OBJECT )
 		throw JSON::exception(BOOL_CONVERSION_CAST, "json object cannot be converted to bool");
 	else if ( *this == ARRAY )
-		throw JSON::exception(BOOL_CONVERSION_CAST, "json array cannot be converted to array");
+		throw JSON::exception(BOOL_CONVERSION_CAST, "json array cannot be converted to bool");
 	throw JSON::exception(BOOL_CONVERSION_ERROR);
 }
 

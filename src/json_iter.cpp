@@ -73,7 +73,7 @@ const bool JSON::iterator::named() const {
 
 const size_t JSON::iterator::index() const {
 
-	return this -> is_array() ? this -> idx : -1;
+	return this -> is_array() ? this -> idx : static_cast<size_t>(-1);
 }
 
 const std::string JSON::iterator::name() const {

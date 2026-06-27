@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <charconv>
+#include <cmath>
 
 #include "json/json.hpp"
 #include "json/json_error.hpp"
@@ -602,24 +603,21 @@ const bool JSON::contains_any(const std::set<std::string>& keys) const {
 const std::string JSON::to_lower(const std::string& s) {
 
 	std::string _s(s);
-	std::transform(_s.cbegin(), _s.cend(), _s.begin(), [](auto ch){ return std::tolower(ch);});
+	std::transform(_s.cbegin(), _s.cend(), _s.begin(), [](unsigned char ch){ return (char)std::tolower(ch);});
 	return _s;
 }
 
 static const std::string f_to_string(const long double& d) {
 
-	std::stringstream ss;
-	ss << std::fixed << d;
-	std::string s = ss.str();
-	if ( s.find_first_of('.') != std::string::npos ) {
+	if ( !std::isfinite(d) ) return "null";   // writer never emits inf/nan -> stays valid JSON
 
-		while ( s.back() == '0' )
-			s.pop_back();
+	// shortest representation that round-trips exactly; locale-independent.
+	char buf[64];
+	auto [ptr, ec] = std::to_chars(buf, buf + sizeof(buf), d);
+	if ( ec != std::errc())
+		return "null";
 
-		if ( s.back() == '.' )
-			s.pop_back();
-	}
-	return s;
+	return std::string(buf, ptr);
 }
 
 const std::string JSON::to_string() const {

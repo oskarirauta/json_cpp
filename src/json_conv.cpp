@@ -15,7 +15,6 @@ const std::map<JSON::TYPE, std::string> JSON::type_descs = {
 
 const std::map<std::string::value_type, std::string> JSON::escape_chars = {
 	{ '\"', "\\\"" },
-	{ '\'', "\\\'" },
 	{ '/', "\\/" },
 	{ '\\', "\\\\" },
 	{ '\b', "\\b" },
@@ -38,6 +37,26 @@ const std::map<std::string::value_type, std::string::value_type> JSON::unescape_
 };
 
 static std::string special_chars = "\b\f\n\r\t";
+
+// Encode a Unicode code point as UTF-8 (used by \u unescaping).
+static void utf8_append(std::string& out, unsigned int cp) {
+
+	if ( cp <= 0x7f ) {
+		out += (char)cp;
+	} else if ( cp <= 0x7ff ) {
+		out += (char)(0xc0 | ( cp >> 6 ));
+		out += (char)(0x80 | ( cp & 0x3f ));
+	} else if ( cp <= 0xffff ) {
+		out += (char)(0xe0 | ( cp >> 12 ));
+		out += (char)(0x80 | (( cp >> 6 ) & 0x3f ));
+		out += (char)(0x80 | ( cp & 0x3f ));
+	} else {
+		out += (char)(0xf0 | ( cp >> 18 ));
+		out += (char)(0x80 | (( cp >> 12 ) & 0x3f ));
+		out += (char)(0x80 | (( cp >> 6 ) & 0x3f ));
+		out += (char)(0x80 | ( cp & 0x3f ));
+	}
+}
 
 const std::string unicode_conv(const std::string::value_type& ch) {
 
@@ -66,6 +85,7 @@ const std::string JSON::unescape(const std::string& s) {
 	bool escaped = false;
 	bool unicode = false;
 	std::string sequence;
+	unsigned int pending_high = 0;   // buffered high surrogate awaiting its low half
 
 	std::string out;
 	for ( auto& ch : s ) {
@@ -80,22 +100,35 @@ const std::string JSON::unescape(const std::string& s) {
 
 				if ( sequence.length() == 4 ) {
 
-					int n;
+					unsigned int n;
 					try {
-						n = std::stoll(sequence, nullptr, 16);
+						n = (unsigned int)std::stoul(sequence, nullptr, 16);
 					} catch ( const std::exception& e) {
+						if ( pending_high ) { utf8_append(out, pending_high); pending_high = 0; }
 						out += "\\u" + sequence;
 						sequence = "";
 						unicode = false;
 						continue;
 					}
-					out += std::string::value_type(n);
+
+					if ( n >= 0xd800 && n <= 0xdbff ) {
+						if ( pending_high ) utf8_append(out, pending_high);
+						pending_high = n;
+					} else if ( n >= 0xdc00 && n <= 0xdfff && pending_high ) {
+						utf8_append(out, 0x10000 + (( pending_high - 0xd800 ) << 10 ) + ( n - 0xdc00 ));
+						pending_high = 0;
+					} else {
+						if ( pending_high ) { utf8_append(out, pending_high); pending_high = 0; }
+						utf8_append(out, n);
+					}
+
 					sequence = "";
 					unicode = false;
 				}
 				continue;
 			}
 
+			if ( pending_high ) { utf8_append(out, pending_high); pending_high = 0; }
 			out += "\\u" + sequence;
 			out += ch;
 			sequence = "";
@@ -119,6 +152,9 @@ const std::string JSON::unescape(const std::string& s) {
 		else out += ch;
 		escaped = false;
 	}
+
+	if ( pending_high )
+		utf8_append(out, pending_high);
 
 	if ( !sequence.empty())
 		out += "\\u" + sequence;

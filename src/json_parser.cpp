@@ -2,10 +2,32 @@
 #include <sstream>
 #include <algorithm>
 #include <stdexcept>
-#include <cmath>
+#include <charconv>
+#include <limits>
+#include <cctype>
 
 #include "json/json.hpp"
 #include "json/json_error.hpp"
+
+// Encode a Unicode code point as UTF-8 (used by \u escape handling).
+static void utf8_append(std::string& out, unsigned int cp) {
+
+	if ( cp <= 0x7f ) {
+		out += (char)cp;
+	} else if ( cp <= 0x7ff ) {
+		out += (char)(0xc0 | ( cp >> 6 ));
+		out += (char)(0x80 | ( cp & 0x3f ));
+	} else if ( cp <= 0xffff ) {
+		out += (char)(0xe0 | ( cp >> 12 ));
+		out += (char)(0x80 | (( cp >> 6 ) & 0x3f ));
+		out += (char)(0x80 | ( cp & 0x3f ));
+	} else {
+		out += (char)(0xf0 | ( cp >> 18 ));
+		out += (char)(0x80 | (( cp >> 12 ) & 0x3f ));
+		out += (char)(0x80 | (( cp >> 6 ) & 0x3f ));
+		out += (char)(0x80 | ( cp & 0x3f ));
+	}
+}
 
 static const std::pair<size_t, size_t> make_coords(const std::string& s, const size_t pos) {
 
@@ -29,7 +51,7 @@ static const std::pair<size_t, size_t> make_coords(const std::string& s, const s
 
 static void consume_ws(const std::string& s, size_t& pos) {
 
-	while ( pos < s.length() && std::isspace(s[pos]))
+	while ( pos < s.length() && std::isspace((unsigned char)s[pos]))
 		pos++;
 
 	if ( pos + 1 < s.length() && s[pos] == '/' && s[pos + 1] == '/' ) {
@@ -198,6 +220,9 @@ JSON JSON::parse_string(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 
 		if ( s[pos] == '\\' ) {
 
+			if ( pos + 1 >= s.length()) // trailing backslash: unterminated, let the MISSING_TICK check below report it
+				break;
+
 			if ( JSON::unescape_chars.find(s[pos + 1]) != JSON::unescape_chars.end()) {
 
 				value += JSON::unescape_chars.at(s[pos + 1]);
@@ -209,25 +234,42 @@ JSON JSON::parse_string(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 				std::string unicode = "0x";
 				for ( size_t i = 0; i < 4; i++ ) {
 					if ( pos + 2 + i >= s.length()) break;
-					if ( std::isdigit(s[pos + 2 + i]) ||
-					   ( s[pos + 2 + i] >= 'a' && s[pos + 2 + i] <= 'f' ) ||
-					   ( s[pos + 2 + i] >= 'A' && s[pos + 2 + i] <= 'F' ))
-						unicode += std::tolower(s[pos + 2 + i]);
+					if ( std::isxdigit((unsigned char)s[pos + 2 + i]))
+						unicode += (char)std::tolower((unsigned char)s[pos + 2 + i]);
 				}
 
 				if ( unicode.length() == 6 ) {
 
-					int unicode_value;
+					unsigned int cp;
 
 					try {
-						unicode_value = std::stoi(unicode, nullptr, 0);
+						cp = (unsigned int)std::stoul(unicode, nullptr, 0);
 					} catch ( const std::exception& e ) {
 						ec = { .code = JSON::ERROR_CODE::INVALID_UNICODE, .pos = pos, .coords = make_coords(s, pos) };
 						return nullptr;
 					}
 
-					value += std::string::value_type(unicode_value);
 					pos += 6;
+
+					// high surrogate: combine with a following \uXXXX low surrogate into one code point
+					if ( cp >= 0xd800 && cp <= 0xdbff &&
+					     pos + 1 < s.length() && s[pos] == '\\' && s[pos + 1] == 'u' ) {
+
+						std::string low = "0x";
+						for ( size_t i = 0; i < 4 && pos + 2 + i < s.length(); i++ )
+							if ( std::isxdigit((unsigned char)s[pos + 2 + i]))
+								low += (char)std::tolower((unsigned char)s[pos + 2 + i]);
+
+						if ( low.length() == 6 ) {
+							unsigned int lo = (unsigned int)std::stoul(low, nullptr, 0);
+							if ( lo >= 0xdc00 && lo <= 0xdfff ) {
+								cp = 0x10000 + (( cp - 0xd800 ) << 10 ) + ( lo - 0xdc00 );
+								pos += 6;
+							}
+						}
+					}
+
+					utf8_append(value, cp);
 					continue;
 
 				} else {
@@ -283,7 +325,7 @@ JSON JSON::parse_number(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 
 	if ( !is_hex ) {
 
-		while ( std::isdigit(s[pos]) || ( s[pos] == '.'  && value.find_first_of('.') == std::string::npos ))
+		while ( std::isdigit((unsigned char)s[pos]) || ( s[pos] == '.'  && value.find_first_of('.') == std::string::npos ))
 			value += s[pos++];
 
 	} else {
@@ -294,18 +336,18 @@ JSON JSON::parse_number(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 			return nullptr;
 		}
 
-		while ( std::string("1234567890abcdef").find(std::tolower(s[pos])) != std::string::npos )
-			value += std::tolower(s[pos++]);
+		while ( std::string("1234567890abcdef").find((char)std::tolower((unsigned char)s[pos])) != std::string::npos )
+			value += (char)std::tolower((unsigned char)s[pos++]);
 
-		while ( std::isspace(s[pos]))
+		while ( std::isspace((unsigned char)s[pos]))
 			pos++;
 
-		if ( std::tolower(s[pos]) == 'e' ) {
+		if ( std::tolower((unsigned char)s[pos]) == 'e' ) {
 			ec = { .code = JSON::ERROR_CODE::HEX_EXP, .pos = pos, .coords = make_coords(s, pos) };
 			return nullptr;
 		}
 
-		if ( std::tolower(s[pos]) == '.' ) {
+		if ( std::tolower((unsigned char)s[pos]) == '.' ) {
 			ec = { .code = JSON::ERROR_CODE::HEX_FLOAT, .pos = pos, .coords = make_coords(s, pos) };
 			return nullptr;
 		}
@@ -318,17 +360,19 @@ JSON JSON::parse_number(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 		else if ( value.find_first_of('.') != std::string::npos )
 			is_float = true;
 
-		while ( value.length() > 1 && value[0] == '0' && std::isdigit(value[1]))
+		while ( value.length() > 1 && value[0] == '0' && std::isdigit((unsigned char)value[1]))
 			value = value.substr(1, value.length() - 1);
 
-		if ( std::tolower(s[pos]) == 'e') {
+		if ( std::tolower((unsigned char)s[pos]) == 'e') {
 
 			exp_pos = pos;
 			pos++;
-			while ( std::isdigit(s[pos]))
+			if ( s[pos] == '+' || s[pos] == '-' )
+				exp += s[pos++];
+			while ( std::isdigit((unsigned char)s[pos]))
 				exp += s[pos++];
 
-			if ( exp.empty())
+			if ( exp.empty() || exp == "+" || exp == "-" )
 				ec = { .code = JSON::ERROR_CODE::EXP_MISSING, .pos = pos, .coords = make_coords(s, pos) };
 		}
 
@@ -352,53 +396,66 @@ JSON JSON::parse_number(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 
 		try {
 			e = std::stoll(exp);
-		} catch ( const std::invalid_argument& e ) {
+		} catch ( const std::invalid_argument& ) {
 			ec = { .code = JSON::ERROR_CODE::ILLEGAL_NUMBER, .pos = exp_pos, .coords = make_coords(s, exp_pos) };
 			return nullptr;
-		} catch ( const std::out_of_range& e ) {
+		} catch ( const std::out_of_range& ) {
 			ec = { .code = JSON::ERROR_CODE::INT_OUT_OF_RANGE, .pos = exp_pos, .coords = make_coords(s, exp_pos) };
 			exp_error = true;
 		}
 	}
 
+	// a negative exponent makes the value fractional even without a '.'
+	if ( !exp.empty() && !exp_error && e < 0 )
+		is_float = true;
+
 	if ( is_float ) {
 
-		double d;
-		try {
-			d = std::stold(value);
-		} catch ( const std::invalid_argument& e ) {
+		// Build the full literal and parse it once: locale-independent, exponent-aware,
+		// no pow() (which would round large values or overflow to inf).
+		std::string lit = value;
+		if ( !exp.empty() && !exp_error )
+			lit += "e" + exp;
+
+		long double d = 0.0L;
+		auto [ptr, fcec] = std::from_chars(lit.data(), lit.data() + lit.size(), d);
+		(void)ptr;
+
+		if ( fcec == std::errc::result_out_of_range ) {
+			// warning, not a hard error: saturate to the largest representable value
+			ec = { .code = JSON::ERROR_CODE::FLOAT_OUT_OF_RANGE, .pos = begin, .coords = make_coords(s, begin) };
+			d = ( !lit.empty() && lit[0] == '-' ) ? -std::numeric_limits<long double>::max()
+			                                      :  std::numeric_limits<long double>::max();
+		} else if ( fcec != std::errc()) {
 			ec = { .code = JSON::ERROR_CODE::ILLEGAL_NUMBER, .pos = begin, .coords = make_coords(s, begin) };
 			return nullptr;
-		} catch ( const std::out_of_range& e ) {
-			ec = { .code = JSON::ERROR_CODE::FLOAT_OUT_OF_RANGE, .pos = begin, .coords = make_coords(s, begin) };
-			d = 0;
 		}
-
-		if ( !exp.empty() && !exp_error )
-			d *= std::pow(10, e);
 
 		return d;
 
 	} else {
 
-		long long ll;
+		// Integer: expand a positive exponent into trailing zeros (bounded - 19 digits
+		// already overflows int64), then parse once.
+		std::string digits = value;
+		if ( !exp.empty() && !exp_error && e > 0 )
+			digits += std::string((size_t)std::min<long long>(e, 19), '0');
 
-		try {
-			ll = std::stoll(value, nullptr, is_hex ? 16 : 10);
-		} catch ( const std::invalid_argument& e ) {
+		long long ll = 0;
+		auto [ptr, fcec] = std::from_chars(digits.data(), digits.data() + digits.size(), ll, is_hex ? 16 : 10);
+		(void)ptr;
 
+		if ( fcec == std::errc::result_out_of_range ) {
+			// warning, not a hard error: saturate to the type's limit
+			ec = { .code = is_hex ? JSON::ERROR_CODE::HEX_OUT_OF_RANGE : JSON::ERROR_CODE::INT_OUT_OF_RANGE,
+				.pos = begin, .coords = make_coords(s, begin) };
+			ll = ( !digits.empty() && digits[0] == '-' ) ? std::numeric_limits<long long>::min()
+			                                             : std::numeric_limits<long long>::max();
+		} else if ( fcec != std::errc()) {
 			ec = { .code = is_hex ? JSON::ERROR_CODE::ILLEGAL_HEX_NUMBER : JSON::ERROR_CODE::ILLEGAL_NUMBER,
 				.pos = begin, .coords = make_coords(s, begin) };
 			return nullptr;
-		} catch ( const std::out_of_range& e ) {
-
-			ec = { .code = is_hex ? JSON::ERROR_CODE::HEX_OUT_OF_RANGE : JSON::ERROR_CODE::INT_OUT_OF_RANGE,
-				.pos = begin, .coords = make_coords(s, begin) };
-			ll = 0;
 		}
-
-		if ( !exp.empty() && !exp_error )
-			ll *= std::pow(10, e);
 
 		return ll;
 	}
@@ -460,7 +517,7 @@ JSON::JSON(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 				  json = JSON::parse_nullptr(s, pos, ec);
 				  break;
 			default:
-				if ( std::isdigit(s[pos]) || s[pos] == '-' || s[pos] == '.' )
+				if ( std::isdigit((unsigned char)s[pos]) || s[pos] == '-' || s[pos] == '.' )
 					json = JSON::parse_number(s, pos, ec);
 				else
 					ec = { .code = JSON::ERROR_CODE::UNSUPPORTED_BEGIN_OF_BLOB, .pos = pos, .coords = make_coords(s, pos) };

@@ -139,7 +139,7 @@ void JSON::validate(const std::vector<JSON::PREDICATE>& reqs, const std::vector<
 				throw JSON::exception(JSON::ERROR_CODE::PREDICATE_UNALLOWED_VALUE, "\"" + make_path(path, p._name) + "\" value \"" +
 					this -> at(p._name).to_string() + "\" does not match with allowed values: " + allowed_list);
 
-		} else if ( this -> contains(p._name) && p._type == JSON::OBJECT && !p._validate.empty() && !this -> at(p._name).empty()) {
+		} else if ( this -> contains(p._name) && p._type == JSON::OBJECT && !p._validate.empty()) {
 
 			std::vector<std::string> _path = path;
 			_path.push_back(p._name);
@@ -147,7 +147,7 @@ void JSON::validate(const std::vector<JSON::PREDICATE>& reqs, const std::vector<
 			try {
 				this -> at(p._name).validate(p._validate, _path);
 			} catch ( const JSON::exception& e ) {
-				throw e;
+				throw;
 			}
 		}
 

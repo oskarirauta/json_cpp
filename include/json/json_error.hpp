@@ -32,6 +32,7 @@ class JSON::exception : public std::runtime_error {
 	private:
 		JSON::ERROR _e;
 		std::string _msg;
+		mutable std::string _what;
 
 	public:
 		const JSON::ERROR_CODE code() const;

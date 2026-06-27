@@ -149,7 +149,17 @@ const std::string JSON::exception::describe() const {
 }
 
 const char* JSON::exception::what() const noexcept {
-	return this -> _msg.empty() ? this -> _e.describe().c_str() : this -> _msg.c_str();
+
+	if ( !this -> _msg.empty())
+		return this -> _msg.c_str();
+
+	try {
+		this -> _what = this -> _e.describe();
+	} catch ( ... ) {
+		return "json error";
+	}
+
+	return this -> _what.c_str();
 }
 
 std::ostream& operator <<(std::ostream& os, const JSON::ERROR& e) {

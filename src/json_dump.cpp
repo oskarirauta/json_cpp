@@ -79,6 +79,8 @@ const std::string JSON::dump(const bool pretty) const {
 
 	if ( *this == JSON::TYPE::OBJECT || *this == JSON::TYPE::ARRAY )
 		return const_iterate(*this, pretty, 0);
+	else if ( *this == JSON::TYPE::STRING )
+		return "\"" + JSON::escape(this -> to_string()) + "\"";
 	else return to_string();
 }
 
@@ -86,6 +88,8 @@ const std::string JSON::dump(const bool pretty) {
 
 	if ( *this == JSON::TYPE::OBJECT || *this == JSON::TYPE::ARRAY )
 		return iterate(*this, pretty, 0);
+	else if ( *this == JSON::TYPE::STRING )
+		return "\"" + JSON::escape(this -> to_string()) + "\"";
 	else return to_string();
 }
 

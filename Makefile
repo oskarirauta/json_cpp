@@ -1,7 +1,7 @@
 all: world
 
 CXX?=g++
-CXXFLAGS?=--std=c++17 -Wall -fPIC -g
+CXXFLAGS?=--std=c++20 -Wall -fPIC -g
 
 example_OBJS:= \
 	objs/main.o

@@ -107,9 +107,6 @@ int main(int argc, char **argv) {
 	ss << ifd.rdbuf();
 	blob = ss.str();
 	ifd.close();
-
-        JSON::ERROR ec;
-
 	try {
 		JSON json = JSON::parse(blob);
 		dump(json);

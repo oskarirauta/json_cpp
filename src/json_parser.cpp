@@ -417,8 +417,14 @@ JSON JSON::parse_number(const std::string& s, size_t& pos, JSON::ERROR& ec) {
 		if ( !exp.empty() && !exp_error )
 			lit += "e" + exp;
 
+#if defined(__APPLE__) || !defined(__GLIBCXX__)
+		double parsed_val = 0.0;
+		auto [ptr, fcec] = std::from_chars(lit.data(), lit.data() + lit.size(), parsed_val);
+		long double d = static_cast<long double>(parsed_val);
+#else
 		long double d = 0.0L;
 		auto [ptr, fcec] = std::from_chars(lit.data(), lit.data() + lit.size(), d);
+#endif
 		(void)ptr;
 
 		if ( fcec == std::errc::result_out_of_range ) {

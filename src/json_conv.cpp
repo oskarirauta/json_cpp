@@ -61,7 +61,7 @@ static void utf8_append(std::string& out, unsigned int cp) {
 const std::string unicode_conv(const std::string::value_type& ch) {
 
 	std::string out(6, '\\');
-	sprintf(&out[1], "u%04x", (int)ch);
+	snprintf(&out[1], 6, "u%04x", static_cast<unsigned char>(ch));
 	return out;
 }
 
@@ -198,7 +198,7 @@ const bool JSON::is_convertible(const JSON::TYPE& to) const {
 		else if ( *this == STRING ) {
 
 			try {
-				std::stold(std::get<std::string>(*this));
+				(void)std::stold(std::get<std::string>(*this));
 			} catch ( const std::exception& e ) {
 				return false;
 			}
@@ -215,7 +215,7 @@ const bool JSON::is_convertible(const JSON::TYPE& to) const {
 		else if ( *this == STRING ) {
 
 			try {
-				std::stoll(std::get<std::string>(*this));
+				(void)std::stoll(std::get<std::string>(*this));
 			} catch ( const std::exception& e ) {
 				return false;
 			}
